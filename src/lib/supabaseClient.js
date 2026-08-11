@@ -1,13 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const url = import.meta.env.VITE_SUPABASE_URL || "https://kpfezbmtmxczpdvqogje.supabase.co";
+// GitHub Actions deve fornecer VITE_SUPABASE_PUBLISHABLE_KEY.
+// O fallback evita que o site fique com tela preta quando o Secret ainda não foi configurado.
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "public-demo-key";
 
-if (!url || !key) {
-  console.warn("Codex Vitae: configure VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY para ativar o backend.");
-}
-
-export const supabase = createClient(url || "https://kpfezbmtmxczpdvqogje.supabase.co", key || "", {
+export const supabase = createClient(url, key, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
 
@@ -16,79 +14,19 @@ export async function signUp(email, password, name) {
   if (error) throw error;
   return data;
 }
-
 export async function signIn(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;
 }
-
-export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
-}
-
-export async function getProfile(userId) {
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
-  if (error) throw error;
-  return data;
-}
-
-export async function saveProfile(profile) {
-  const { data, error } = await supabase.from("profiles").upsert(profile).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export async function getFeed(limit = 30) {
-  const { data, error } = await supabase.from("posts").select("*, profiles!posts_author_id_fkey(id,name,avatar_url,level)").order("created_at", { ascending: false }).limit(limit);
-  if (error) throw error;
-  return data || [];
-}
-
-export async function publishPost({ authorId, text, achievementId = null }) {
-  const { data, error } = await supabase.from("posts").insert({ author_id: authorId, text: text.trim(), achievement_id: achievementId }).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export function subscribeToFeed(onChange) {
-  return supabase.channel("codex-feed").on("postgres_changes", { event: "*", schema: "public", table: "posts" }, onChange).subscribe();
-}
-
-export async function getLeaderboard(mode = "level", limit = 50) {
-  const order = mode === "time" ? "usage_seconds" : "total_xp";
-  const { data, error } = await supabase.from("profiles").select("id,name,avatar_url,level,total_xp,usage_seconds,quests_completed_ever,max_streak_ever").order(order, { ascending: false }).limit(limit);
-  if (error) throw error;
-  return data || [];
-}
-
-export async function createPrivateConversation(myId, otherId) {
-  const { data: existing } = await supabase.from("conversation_members").select("conversation_id").eq("user_id", myId);
-  const ids = (existing || []).map((x) => x.conversation_id);
-  if (ids.length) {
-    const { data: common } = await supabase.from("conversation_members").select("conversation_id").eq("user_id", otherId).in("conversation_id", ids);
-    if (common?.length) return common[0].conversation_id;
-  }
-  const { data: conversation, error } = await supabase.from("conversations").insert({}).select().single();
-  if (error) throw error;
-  const { error: memberError } = await supabase.from("conversation_members").insert([{ conversation_id: conversation.id, user_id: myId }, { conversation_id: conversation.id, user_id: otherId }]);
-  if (memberError) throw memberError;
-  return conversation.id;
-}
-
-export async function getMessages(conversationId) {
-  const { data, error } = await supabase.from("messages").select("*").eq("conversation_id", conversationId).order("created_at", { ascending: true });
-  if (error) throw error;
-  return data || [];
-}
-
-export async function sendMessage(conversationId, senderId, text) {
-  const { data, error } = await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: senderId, text: text.trim() }).select().single();
-  if (error) throw error;
-  return data;
-}
-
-export function subscribeToMessages(conversationId, onMessage) {
-  return supabase.channel(`codex-chat-${conversationId}`).on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` }, (payload) => onMessage(payload.new)).subscribe();
-}
+export async function signOut() { const { error } = await supabase.auth.signOut(); if (error) throw error; }
+export async function getProfile(userId) { const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single(); if (error) throw error; return data; }
+export async function saveProfile(profile) { const { data, error } = await supabase.from("profiles").upsert(profile).select().single(); if (error) throw error; return data; }
+export async function getFeed(limit = 30) { const { data, error } = await supabase.from("posts").select("*, profiles!posts_author_id_fkey(id,name,avatar_url,level)").order("created_at", { ascending: false }).limit(limit); if (error) throw error; return data || []; }
+export async function publishPost({ authorId, text, achievementId = null }) { const { data, error } = await supabase.from("posts").insert({ author_id: authorId, text: text.trim(), achievement_id: achievementId }).select().single(); if (error) throw error; return data; }
+export function subscribeToFeed(onChange) { return supabase.channel("codex-feed").on("postgres_changes", { event: "*", schema: "public", table: "posts" }, onChange).subscribe(); }
+export async function getLeaderboard(mode = "level", limit = 50) { const order = mode === "time" ? "usage_seconds" : "total_xp"; const { data, error } = await supabase.from("profiles").select("id,name,avatar_url,level,total_xp,usage_seconds,quests_completed_ever,max_streak_ever").order(order, { ascending: false }).limit(limit); if (error) throw error; return data || []; }
+export async function createPrivateConversation(myId, otherId) { const { data: existing } = await supabase.from("conversation_members").select("conversation_id").eq("user_id", myId); const ids = (existing || []).map((x) => x.conversation_id); if (ids.length) { const { data: common } = await supabase.from("conversation_members").select("conversation_id").eq("user_id", otherId).in("conversation_id", ids); if (common?.length) return common[0].conversation_id; } const { data: conversation, error } = await supabase.from("conversations").insert({}).select().single(); if (error) throw error; const { error: memberError } = await supabase.from("conversation_members").insert([{ conversation_id: conversation.id, user_id: myId }, { conversation_id: conversation.id, user_id: otherId }]); if (memberError) throw memberError; return conversation.id; }
+export async function getMessages(conversationId) { const { data, error } = await supabase.from("messages").select("*").eq("conversation_id", conversationId).order("created_at", { ascending: true }); if (error) throw error; return data || []; }
+export async function sendMessage(conversationId, senderId, text) { const { data, error } = await supabase.from("messages").insert({ conversation_id: conversationId, sender_id: senderId, text: text.trim() }).select().single(); if (error) throw error; return data; }
+export function subscribeToMessages(conversationId, onMessage) { return supabase.channel(`codex-chat-${conversationId}`).on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` }, (payload) => onMessage(payload.new)).subscribe(); }
