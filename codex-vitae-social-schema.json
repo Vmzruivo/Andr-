@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "purpose": "Backend-ready data model for Codex Vitae social features",
+  "collections": {
+    "users": ["id", "name", "avatar", "level", "totalXP", "questsCompletedEver", "maxStreakEver", "usageSeconds", "createdAt", "updatedAt"],
+    "posts": ["id", "authorId", "text", "achievementId", "createdAt", "likesCount", "commentsCount"],
+    "likes": ["postId", "userId", "createdAt"],
+    "comments": ["id", "postId", "authorId", "text", "createdAt"],
+    "friendships": ["id", "requesterId", "receiverId", "status", "createdAt", "updatedAt"],
+    "conversations": ["id", "participantIds", "updatedAt"],
+    "messages": ["id", "conversationId", "senderId", "text", "createdAt", "readAt"]
+  },
+  "rules": {
+    "users": "Public profile data may be read; private account settings must not be exposed.",
+    "posts": "Authenticated users may create posts; authors may edit/delete their own posts.",
+    "messages": "Only conversation participants may read or create messages."
+  }
+}
