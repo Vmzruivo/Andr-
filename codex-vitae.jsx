@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Home, Trophy, Medal, MessageCircle, Settings, Users, Flame, Star, Clock, LogIn, Send, ArrowLeft, Heart, Camera, Plus, Trash2, User, X, Check, UserRound, LogOut, ChevronRight } from "lucide-react";
-import { supabase, signUp, signIn, signOut, getProfile, saveProfile, updateProgress, getFeed, publishPost, subscribeToFeed, getLeaderboard, createPrivateConversation, getMyConversations, getMessages, sendMessage, subscribeToMessages, getMyLikes, toggleLike } from "./src/lib/supabaseClient";
+import { Home, Trophy, Medal, MessageCircle, Settings, Users, Flame, Star, Clock, LogIn, Send, ArrowLeft, Heart, Camera, Plus, Trash2, User, X, Check, UserRound, LogOut, ChevronRight, Mail } from "lucide-react";
+import { supabase, signUp, signIn, signOut, resendConfirmation, getProfile, saveProfile, updateProgress, getFeed, publishPost, subscribeToFeed, getLeaderboard, createPrivateConversation, getMyConversations, getMessages, sendMessage, subscribeToMessages, getMyLikes, toggleLike } from "./src/lib/supabaseClient";
 
 const GOLD="#C9A455", GOLD_LIGHT="#E7CD8C", INK="#140D12", SURFACE="#1E1520", SURFACE_2="#291C2B", TEXT="#F5EFE6", MUTED="#A497A3", WINE="#7A4356";
 const tabs=[{id:"home",label:"Início",icon:Home},{id:"feed",label:"Feed",icon:Users},{id:"board",label:"Placar",icon:Trophy},{id:"achievements",label:"Conquistas",icon:Medal},{id:"messages",label:"Mensagens",icon:MessageCircle},{id:"settings",label:"Config.",icon:Settings}];
@@ -25,8 +25,15 @@ function maxStreakOfDates(dates){const sorted=[...(dates||[])].sort();if(!sorted
 function resizeImage(file,max=360){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(w>h&&w>max){h=Math.round(h*max/w);w=max}else if(h>max){w=Math.round(w*max/h);h=max}const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);resolve(c.toDataURL("image/jpeg",.82))};img.onerror=reject;img.src=e.target.result};r.onerror=reject;r.readAsDataURL(file)})}
 
 export default function CodexVitae(){
- const [session,setSession]=useState(null),[profile,setProfile]=useState(null),[tab,setTab]=useState("home"),[posts,setPosts]=useState([]),[likes,setLikes]=useState(new Set()),[board,setBoard]=useState([]),[boardMode,setBoardMode]=useState("level"),[authMode,setAuthMode]=useState("login"),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[name,setName]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(true),[postText,setPostText]=useState(""),[chatId,setChatId]=useState(null),[messages,setMessages]=useState([]),[messageText,setMessageText]=useState(""),[conversations,setConversations]=useState([]),[quests,setQuests]=useState([]),[newQuest,setNewQuest]=useState(""),[newDifficulty,setNewDifficulty]=useState("medium"),[profileView,setProfileView]=useState(null),[settingsOpen,setSettingsOpen]=useState(false),[saving,setSaving]=useState(false),[usage,setUsage]=useState(0),[liveTick,setLiveTick]=useState(0);
+ const [session,setSession]=useState(null),[profile,setProfile]=useState(null),[tab,setTab]=useState("home"),[posts,setPosts]=useState([]),[likes,setLikes]=useState(new Set()),[board,setBoard]=useState([]),[boardMode,setBoardMode]=useState("level"),[authMode,setAuthMode]=useState("login"),[authBusy,setAuthBusy]=useState(false),[confirmationSent,setConfirmationSent]=useState(false),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[name,setName]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(true),[postText,setPostText]=useState(""),[chatId,setChatId]=useState(null),[messages,setMessages]=useState([]),[messageText,setMessageText]=useState(""),[conversations,setConversations]=useState([]),[quests,setQuests]=useState([]),[newQuest,setNewQuest]=useState(""),[newDifficulty,setNewDifficulty]=useState("medium"),[profileView,setProfileView]=useState(null),[settingsOpen,setSettingsOpen]=useState(false),[saving,setSaving]=useState(false),[usage,setUsage]=useState(0),[liveTick,setLiveTick]=useState(0);
  const sessionStart=useRef(Date.now());
+
+// FIX (bug 1): keep refs to the latest profile/usage so the 15s interval below
+// never reads a stale closure from the render where the effect was created.
+const profileRef=useRef(profile);
+const usageRef=useRef(usage);
+useEffect(()=>{profileRef.current=profile},[profile]);
+useEffect(()=>{usageRef.current=usage},[usage]);
  const questKey=session?`${QUEST_KEY}:${session.user.id}`:QUEST_KEY;
  const effectiveProfile=useMemo(()=>profile||{id:session?.user?.id,name:"Aventureiro",avatar_url:null,level:1,total_xp:0,quests_completed_ever:0,max_streak_ever:0,usage_seconds:0},[profile,session]);
  const overall=levelInfo(effectiveProfile.total_xp||0);
@@ -38,9 +45,46 @@ export default function CodexVitae(){
  useEffect(()=>{if(tab!=="board"||!session)return;getLeaderboard(boardMode).then(setBoard).catch(e=>setError(e.message))},[tab,boardMode,session]);
  useEffect(()=>{if(!chatId)return;getMessages(chatId).then(setMessages).catch(e=>setError(e.message));const ch=subscribeToMessages(chatId,m=>setMessages(x=>x.some(y=>y.id===m.id)?x:[...x,m]));return()=>{supabase.removeChannel(ch)}},[chatId]);
  useEffect(()=>{const t=setInterval(()=>setLiveTick(x=>x+1),1000);return()=>clearInterval(t)},[]);
- useEffect(()=>{if(!session)return;const t=setInterval(async()=>{const elapsed=Math.floor((Date.now()-sessionStart.current)/1000);if(elapsed<10)return;sessionStart.current=Date.now();const next=(profile?.usage_seconds||usage||0)+elapsed;setUsage(next);try{const p=await updateProgress(session.user.id,{usage_seconds:next});setProfile(p)}catch{}},15000);return()=>clearInterval(t)},[session]);
+ // FIX (bug 1 + bug 2): read profile/usage from refs (always current) instead
+// of the closure captured when this effect was created, and only advance
+// sessionStart after the save actually succeeds so a failed request doesn't
+// silently discard that chunk of elapsed time.
+useEffect(()=>{if(!session)return;const t=setInterval(async()=>{const elapsed=Math.floor((Date.now()-sessionStart.current)/1000);if(elapsed<10)return;const next=(profileRef.current?.usage_seconds||usageRef.current||0)+elapsed;try{const p=await updateProgress(session.user.id,{usage_seconds:next});sessionStart.current=Date.now();setUsage(next);setProfile(p)}catch{}},15000);return()=>clearInterval(t)},[session]);
 
- const auth=async()=>{setError("");try{if(authMode==="signup")await signUp(email,password,name||"Aventureiro");else await signIn(email,password)}catch(e){setError(e.message)}};
+ const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const auth=async()=>{
+  setError("");
+  const cleanEmail=email.trim();
+  // FIX (bug 4): validate on the client before hitting the network, so
+  // people get instant feedback instead of a vague server error.
+  if(!EMAIL_RE.test(cleanEmail)){setError("Digite um e-mail válido.");return}
+  if(!password||password.length<6){setError("A senha precisa ter pelo menos 6 caracteres.");return}
+  setAuthBusy(true);
+  try{
+    if(authMode==="signup"){
+      const result=await signUp(cleanEmail,password,name||"Aventureiro");
+      if(result.requiresEmailConfirmation){
+        // FIX (bug 4): previously nothing happened here — the screen looked
+        // frozen. Now we show a clear "check your e-mail" confirmation step.
+        setConfirmationSent(true);
+      }
+    }else{
+      await signIn(cleanEmail,password);
+    }
+  }catch(e){
+    setError(e.message);
+    // FIX (bug 4): if login fails because the account isn't confirmed yet,
+    // send the user straight to the resend screen instead of a dead end.
+    if(/ainda não foi confirmada/i.test(e.message||""))setConfirmationSent(true);
+  }
+  finally{setAuthBusy(false)}
+};
+const resend=async()=>{
+  setError("");setAuthBusy(true);
+  try{await resendConfirmation(email)}
+  catch(e){setError(e.message)}
+  finally{setAuthBusy(false)}
+};
  const addQuest=()=>{if(!newQuest.trim())return;const d=DIFFICULTIES.find(x=>x.key===newDifficulty);setQuests(x=>[...x,{id:crypto.randomUUID(),name:newQuest.trim(),difficulty:newDifficulty,xp:d.xp,dates:[]}]);setNewQuest("")};
  const completeQuest=async q=>{if(!session)return;setError("");const date=today();const done=q.dates.includes(date);const dates=done?q.dates.filter(d=>d!==date):[...q.dates,date];setQuests(xs=>xs.map(x=>x.id===q.id?{...x,dates}:x));const xpDelta=done?-q.xp:q.xp;const nextXp=Math.max(0,(effectiveProfile.total_xp||0)+xpDelta);const li=levelInfo(nextXp);const best=Math.max(effectiveProfile.max_streak_ever||0,maxStreakOfDates(dates));const next={total_xp:nextXp,level:li.level,max_streak_ever:best,quests_completed_ever:done?(effectiveProfile.quests_completed_ever||0):((effectiveProfile.quests_completed_ever||0)+1)};try{const p=await updateProgress(session.user.id,next);setProfile(p)}catch(e){setError(e.message)}};
  const deleteQuest=q=>setQuests(xs=>xs.filter(x=>x.id!==q.id));
@@ -55,7 +99,18 @@ export default function CodexVitae(){
  const selectConversation=id=>{setChatId(id);setTab("messages")};
 
  if(loading)return <main className="cv-app"><style>{css}</style><div className="cv-card cv-loading">Carregando Codex Vitae…</div></main>;
- if(!session)return <main className="cv-app"><style>{css}</style><div className="cv-shell"><div className="cv-card cv-auth"><Star size={44} color={GOLD}/><h1>Codex Vitae</h1><p>Entre na sua jornada ou crie seu aventureiro.</p>{authMode==="signup"&&<input placeholder="Nome" value={name} onChange={e=>setName(e.target.value)}/>}<input placeholder="E-mail" type="email" value={email} onChange={e=>setEmail(e.target.value)}/><input placeholder="Senha" type="password" value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&auth()}/>{error&&<p className="cv-error">{error}</p>}<button className="cv-button" onClick={auth}><LogIn size={16}/>{authMode==="signup"?"Criar conta":"Entrar"}</button><button className="cv-link" onClick={()=>setAuthMode(authMode==="signup"?"login":"signup")}>{authMode==="signup"?"Já tenho uma conta":"Criar uma conta"}</button></div></div></main>;
+ if(!session)return <main className="cv-app"><style>{css}</style><div className="cv-shell">{confirmationSent?
+<div className="cv-card cv-auth">
+  <Mail size={44} color={GOLD}/>
+  <h1>Confirme seu e-mail</h1>
+  <p>Enviamos um link de confirmação para <b>{email.trim()}</b>. Abra sua caixa de entrada (e o spam) e toque no link para ativar sua conta.</p>
+  {error&&<p className="cv-error">{error}</p>}
+  <button className="cv-button" disabled={authBusy} onClick={resend}>{authBusy?"Enviando…":"Reenviar e-mail de confirmação"}</button>
+  <button className="cv-link" onClick={()=>{setConfirmationSent(false);setAuthMode("login");setError("")}}>Já confirmei, voltar para o login</button>
+</div>
+:
+<div className="cv-card cv-auth"><Star size={44} color={GOLD}/><h1>Codex Vitae</h1><p>Entre na sua jornada ou crie seu aventureiro.</p>{authMode==="signup"&&<input placeholder="Nome" value={name} onChange={e=>setName(e.target.value)}/>}<input placeholder="E-mail" type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&auth()}/><input placeholder="Senha" type="password" autoComplete={authMode==="signup"?"new-password":"current-password"} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&auth()}/>{error&&<p className="cv-error">{error}</p>}<button className="cv-button" disabled={authBusy} onClick={auth}><LogIn size={16}/>{authBusy?"Aguarde…":authMode==="signup"?"Criar conta":"Entrar"}</button><button className="cv-link" onClick={()=>{setAuthMode(authMode==="signup"?"login":"signup");setError("")}}>{authMode==="signup"?"Já tenho uma conta":"Criar uma conta"}</button></div>
+}</div></main>;
 
  const unlocked=ACHIEVEMENTS.filter(a=>a.check({...effectiveProfile,level:overall.level}));
  const liveUsage=(effectiveProfile.usage_seconds||usage||0)+Math.floor((Date.now()-sessionStart.current)/1000);
