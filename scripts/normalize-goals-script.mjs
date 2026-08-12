@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+const file='scripts/patch-goals.mjs';
+let s=fs.readFileSync(file,'utf8');
+const start=s.indexOf('const helpers=`');
+const end=s.indexOf('`.replaceAll',start);
+if(start<0||end<0) throw new Error('Goal helpers template not found');
+const before=s.slice(0,start+15);
+const inner=s.slice(start+15,end).replaceAll('`','\\`');
+const after=s.slice(end);
+s=before+inner+after;
+fs.writeFileSync(file,s);
