@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 const file='codex-vitae.jsx';
 let s=fs.readFileSync(file,'utf8');
-const MARKER='// CODEX_SOCIAL_PRIVACY_FINAL_V2';
+const MARKER='// CODEX_SOCIAL_PRIVACY_FINAL_V3';
 if(s.includes(MARKER)){console.log('Social/privacy finalizer already applied');process.exit(0)}
 function once(pattern,replacement,label){const before=s;s=s.replace(pattern,replacement);if(s===before)throw new Error(`Finalizer target not found: ${label}`)}
 
@@ -24,4 +24,4 @@ const cssRules=' .cv-post-photo-tools{display:flex;gap:10px;align-items:center;m
 if(!s.includes('.cv-post-photo-tools{'))s=s.replace('@media(max-width:620px)',cssRules+'@media(max-width:620px)');
 else if(!s.includes('.cv-private-toggle{'))s=s.replace('@media(max-width:620px)',`.cv-private-toggle{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-weight:800}.cv-private-toggle input{width:18px;height:18px;accent-color:#C9A455;}\n@media(max-width:620px)`);
 
-s+=`\n${MARKER}\n`;fs.writeFileSync(file,s);console.log('Final social/privacy features applied');
+s+=`\n${MARKER}\n`;fs.writeFileSync(file,s);console.log('Final social/privacy V3 features applied');
