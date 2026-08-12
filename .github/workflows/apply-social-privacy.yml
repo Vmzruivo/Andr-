@@ -24,7 +24,7 @@ jobs:
 
       - name: Build test
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Commit patched app
