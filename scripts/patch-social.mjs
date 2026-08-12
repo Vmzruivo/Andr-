@@ -6,7 +6,7 @@ let s=fs.readFileSync(file,'utf8');
 const oldImport='import { supabase, signUp, signIn, signOut, resendConfirmation, getProfile, saveProfile, updateProgress, getFeed, publishPost, subscribeToFeed, getLeaderboard, createPrivateConversation, getMyConversations, getMessages, sendMessage, subscribeToMessages, getMyLikes, toggleLike } from "./src/lib/supabaseClient";';
 const newImport='import { supabase, signUp, signIn, signOut, resendConfirmation, getProfile, saveProfile, updateProgress, getFeed, publishPost, updatePost, deletePost, getComments, addComment, subscribeToComments, subscribeToFeed, getLeaderboard, createPrivateConversation, getMyConversations, getMessages, sendMessage, subscribeToMessages, getMyLikes, toggleLike } from "./src/lib/supabaseClient";';
 if(s.includes(oldImport)) s=s.replace(oldImport,newImport);
-else if(!s.includes('updatePost, deletePost, getComments')) throw new Error('Import social não encontrado');
+else if(s.includes('updatePost, deletePost')) s=s.replace('updatePost, deletePost, subscribeToFeed','updatePost, deletePost, getComments, addComment, subscribeToComments, subscribeToFeed'); else throw new Error('Import social não encontrado');
 
 if(!s.includes('[editingPost,setEditingPost]')){
   const stateNeedle='[postText,setPostText]=useState("")';
@@ -39,5 +39,9 @@ const cssMarker='.cv-actions{display:flex;gap:8px;margin-top:12px}';
 const cssAdd='.cv-post-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.cv-post-menu{display:flex;gap:2px}.cv-edit-post textarea{margin:10px 0;min-height:100px}.cv-comments{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06)}.cv-comment-list{display:flex;flex-direction:column;gap:10px}.cv-comment{display:flex;gap:8px;align-items:flex-start}.cv-comment .cv-avatar{flex:none}.cv-comment b,.cv-comment p,.cv-comment small{display:block}.cv-comment p{margin:2px 0;white-space:pre-wrap}.cv-comment small{color:${MUTED};font-size:10px}.cv-comment-compose{display:flex;gap:8px;margin-top:10px}.cv-comment-compose input{flex:1}.cv-actions{display:flex;gap:8px;margin-top:12px}';
 if(s.includes(cssMarker)&&!s.includes('.cv-post-head{')) s=s.replace(cssMarker,cssAdd);
 
+if(!s.includes('cv-post-photo-tools')){
+  s=s.replace('<textarea placeholder="Compartilhe sua conquista ou progresso…" value={postText}', '<div className="cv-post-photo-tools"><label className="cv-photo-button"><ImageIcon size={18}/> Adicionar foto<input type="file" accept="image/*" onChange={uploadPostImage} hidden/></label>{postImage&&<button type="button" className="cv-photo-clear" onClick={()=>setPostImage(null)}>Remover foto</button>}</div><textarea placeholder="Compartilhe sua conquista ou progresso…" value={postText}');
+  s=s.replace('<p className="cv-post-text">{p.text}</p>', '{p.image_url&&<img className="cv-post-image" src={p.image_url} alt="Foto da publicação" loading="lazy"/>}<p className="cv-post-text">{p.text}</p>');
+}
 fs.writeFileSync(file,s);
 console.log('Social post editing/deletion/comments patch applied');
