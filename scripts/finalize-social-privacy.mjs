@@ -14,7 +14,7 @@ if(!s.includes('cv-post-photo-tools')){
   const picker='<div className="cv-post-photo-tools"><label className="cv-photo-button"><ImageIcon size={18}/> Adicionar foto<input type="file" accept="image/*" onChange={uploadPostImage} hidden/></label>{postImage&&<button type="button" className="cv-photo-clear" onClick={()=>setPostImage(null)}>Remover foto</button>}</div>';
   s=s.replace(needle,picker+needle);
 }
-if(!s.includes('p.image_url&&<img className="cv-post-image"'))s=s.replace('<p className="cv-post-text">{p.text}</p>','{p.image_url&&<img className="cv-post-image" src={p.image_url} alt="Foto da publicação" loading="lazy"/>}<p className="cv-post-text">{p.text}</p>');
+if(!s.includes('cv-post-image'))s=s.replace('<p className="cv-post-text">{p.text}</p>','<>{p.image_url&&<img className="cv-post-image" src={p.image_url} alt="Foto da publicação" loading="lazy"/>}<p className="cv-post-text">{p.text}</p></>');
 s=s.replace('const author=p.profiles||effectiveProfile;','const author=p.profiles||{name:"Perfil privado",avatar_url:null,equipped_title:null};');
 s=s.replace('const ca=c.profiles||effectiveProfile;','const ca=c.profiles||{name:"Perfil privado",avatar_url:null,equipped_title:null};');
 
