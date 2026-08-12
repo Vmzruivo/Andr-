@@ -1,18 +1,16 @@
 import fs from 'node:fs';
 const f='codex-vitae.jsx';
 let s=fs.readFileSync(f,'utf8');
-if(s.includes('CODEX_SCHEDULE_HOME_V1')){console.log('already applied');process.exit(0)}
-const marker='// CODEX_SCHEDULE_HOME_V1';
-const schedule=`
-const goalSchedule=(()=>{const goals=quests||[];if(!goals.length)return null;const todayName=new Date().toLocaleDateString('pt-BR',{weekday:'long'});const items=goals.filter(g=>!g.completed).slice(0,6);return <div className="cv-card" style={{marginTop:14}}><div className="cv-section-head"><div><h2>📅 Seu cronograma</h2><p className="cv-muted">Organizado a partir das suas metas e objetivos.</p></div><span className="cv-badge">{todayName}</span></div><div style={{display:'grid',gap:10}}>{items.map((g,i)=><div key={g.id||i} className="cv-quest"><div className="cv-quest-info"><b>{g.title||g.text||'Objetivo'}</b><small>{g.deadline?\`Prazo: \${new Date(g.deadline).toLocaleDateString('pt-BR')}\`:'Objetivo da sua meta'}</small><div className="cv-progress"><span style={{width:\`\${g.completed?100:0}%\`}}/></div></div><span className="cv-badge">{g.xp||0} XP</span></div>)}</div></div>})()
-`;
-s=s.replace(marker,marker+'\n'+schedule);
-// Place schedule immediately after the system mission card on Home.
-const needle='{missionCard}</section>,\\n feed:';
-if(!s.includes(needle)) throw new Error('Home mission placement not found');
-s=s.replace(needle,'{missionCard}{goalSchedule}</section>,\\n feed:');
-// Responsive five difficulty buttons: use auto-fit and smaller labels so Nightmare stays inside mobile width.
+if(s.includes('CODEX_SCHEDULE_HOME_V2')){console.log('schedule already applied');process.exit(0)}
+const marker='// CODEX_SCHEDULE_HOME_V2';
+const helper=`\n${marker}\nconst homeGoalSchedule=(()=>{const all=(goals||[]).flatMap(g=>(g.goal_objectives||[]).filter(o=>!o.completed_at).map(o=>({...o,goalTitle:g.title,goalDeadline:g.deadline}))).sort((a,b)=>String(a.due_date||a.goalDeadline||'9999').localeCompare(String(b.due_date||b.goalDeadline||'9999'))).slice(0,6);if(!all.length)return <div className="cv-card" style={{marginTop:14}}><h2>📅 Seu cronograma</h2><p className="cv-muted">Crie uma meta e seus objetivos aparecerão aqui.</p></div>;return <div className="cv-card" style={{marginTop:14}}><div className="cv-section-head"><div><h2>📅 Seu cronograma</h2><p className="cv-muted">Seus próximos objetivos, organizados a partir das suas metas.</p></div><span className="cv-badge">{all.length} pendentes</span></div><div style={{display:'grid',gap:10}}>{all.map(o=><div key={o.id} className="cv-quest"><div className="cv-quest-info"><b>{o.title}</b><small>{o.goalTitle} · {o.due_date||o.goalDeadline?new Date((o.due_date||o.goalDeadline)+'T12:00:00').toLocaleDateString('pt-BR'):'Sem prazo'} · +{o.xp||0} XP</small></div><button className="cv-button" onClick={()=>setTab('goals')}>Abrir meta</button></div>)}</div></div>})()\n`;
+const anchor='const content={';
+if(!s.includes(anchor))throw new Error('Content anchor not found');
+s=s.replace(anchor,helper+'\n'+anchor);
+const needle='{missionCard}</section>';
+if(s.includes(needle))s=s.replace(needle,'{missionCard}{homeGoalSchedule}</section>');
+else console.log('Home mission marker not found; schedule helper still installed');
 s=s.replace('gridTemplateColumns:"repeat(5,1fr)"','gridTemplateColumns:"repeat(5,minmax(0,1fr))"');
 s=s.replace('<small>{d.xp} XP</small>','<small style={{fontSize:10,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{d.xp} XP</small>');
 fs.writeFileSync(f,s);
-console.log('schedule home + responsive mission tabs applied');
+console.log('goal schedule + responsive mission tabs applied');
