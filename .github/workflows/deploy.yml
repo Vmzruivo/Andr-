@@ -15,10 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Public Supabase client values are intentionally available to the browser build.
-  # Supabase publishable keys are safe to expose when RLS is correctly configured.
   VITE_SUPABASE_URL: https://kpfezbmtmxczpdvqogje.supabase.co
-  VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_oD41poIileZVeuzUV7qspg_eIOE89wT
+  VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
 jobs:
   build:
@@ -30,10 +28,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Build
         run: npm run build
+      - name: Verify build output
+        run: test -f dist/index.html && test -s dist/index.html
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
@@ -48,7 +49,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      # Deploy the finalized social/privacy build after the automated patch commit.
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
