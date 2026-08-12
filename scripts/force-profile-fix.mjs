@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+const file='codex-vitae.jsx';
+let s=fs.readFileSync(file,'utf8');
+if(s.includes('CODEX_FORCE_PROFILE_FIX_V3')) process.exit(0);
+const marker='// CODEX_FORCE_PROFILE_FIX_V3';
+const block=`\n${marker}\nconst persistProfile=async patch=>{if(!session?.user?.id)throw new Error("Sessão expirada. Entre novamente.");const clean={...patch};if('name' in clean){clean.name=String(clean.name||'').trim();if(clean.name.length<2)throw new Error('O nome precisa ter pelo menos 2 caracteres.');if(clean.name.length>24)throw new Error('O nome pode ter no máximo 24 caracteres.')}setSaving?.(true);try{const updated=await updateProgress(session.user.id,clean);setProfile(updated);if('name' in clean)setName(updated.name||clean.name);return updated}catch(err){setError?.(err?.message||'Não foi possível salvar.');throw err}finally{setSaving?.(false)}};\nconst persistName=async()=>{try{await persistProfile({name})}catch{}};\nconst persistPrivacy=async()=>{try{await persistProfile({is_private:!effectiveProfile.is_private})}catch{}};\nconst persistTitle=async title=>{try{await persistProfile({equipped_title:title})}catch{}};\nconst persistAvatar=async event=>{const file=event.target.files?.[0];if(!file)return;try{if(!file.type.startsWith('image/'))throw new Error('Escolha uma imagem válida.');const data=await resizeImage(file);await persistProfile({avatar_url:data});recordActivity('photo');recordActivity('profile')}catch(err){setError?.(err?.message||'Não foi possível salvar a foto.')}finally{event.target.value=''}};\n`;
+const anchor='const questKey=session?';
+if(!s.includes(anchor)) throw new Error('profile state anchor not found');
+s=s.replace(anchor,block+'\n'+anchor);
+s=s.replace(/onClick=\{saveName\}/g,'onClick={persistName}');
+s=s.replace(/onChange=\{uploadAvatar\}/g,'onChange={persistAvatar}');
+s=s.replace(/onClick=\{togglePrivacy\}/g,'onClick={persistPrivacy}');
+fs.writeFileSync(file,s);
