@@ -6,7 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 // the project publishable values as a fallback so a GitHub Pages build cannot
 // render a completely blank screen just because Pages did not inject Vite envs.
 const url = import.meta.env.VITE_SUPABASE_URL || "https://kpfezbmtmxczpdvqogje.supabase.co";
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_oD41poIileZVeuzUV7qspg_eIOE89wT";
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_oD41poIileZVeuzUV7qspg_eIOE89tW";
 
 export const supabase = createClient(url, key, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
@@ -29,12 +29,13 @@ export async function signUp(email, password, name) {
 }
 export async function signIn(email, password) { const { data, error } = await supabase.auth.signInWithPassword({ email: String(email || "").trim().toLowerCase(), password }); if (error) { if (/email not confirmed/i.test(error.message || "")) throw new Error("Sua conta ainda não foi confirmada. Abra o e-mail de confirmação e depois tente entrar novamente."); throw error; } return data; }
 export async function signOut() { const { error } = await supabase.auth.signOut(); if (error) throw error; }
+export async function deleteMyAccount() { const { error } = await supabase.rpc("delete_my_account"); if (error) throw error; await supabase.auth.signOut(); }
 export async function resendConfirmation(email) { const cleanEmail = String(email || "").trim().toLowerCase(); if (!cleanEmail) throw new Error("Digite seu e-mail."); const redirectTo = `${window.location.origin}${window.location.pathname}`; const { error } = await supabase.auth.resend({ type: "signup", email: cleanEmail, options: { emailRedirectTo: redirectTo } }); if (error) { const msg = String(error.message || ""); if (/rate limit|60\s+seconds/i.test(msg)) throw new Error("Aguarde um pouco antes de reenviar o e-mail de confirmação novamente."); throw error; } }
 export async function getProfile(userId) { const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single(); if (error) throw error; return data; }
 export async function saveProfile(profile) { const { data, error } = await supabase.from("profiles").upsert(profile).select().single(); if (error) throw error; return data; }
 export async function updateProgress(userId, patch) { const { data, error } = await supabase.from("profiles").update(patch).eq("id", userId).select().single(); if (error) throw error; return data; }
 
-const profileFields = "id,name,avatar_url,level,total_xp,quests_completed_ever,max_streak_ever,usage_seconds";
+const profileFields = "id,name,avatar_url,level,total_xp,quests_completed_ever,max_streak_ever,usage_seconds,equipped_title";
 export async function getFeed(limit = 30) { const { data, error } = await supabase.from("posts").select(`*, profiles!posts_author_id_fkey(${profileFields})`).order("created_at", { ascending: false }).limit(limit); if (error) throw error; return data || []; }
 export async function publishPost({ authorId, text, achievementId = null }) { const { data, error } = await supabase.from("posts").insert({ author_id: authorId, text: text.trim(), achievement_id: achievementId }).select(`*, profiles!posts_author_id_fkey(${profileFields})`).single(); if (error) throw error; return data; }
 export async function updatePost(postId, authorId, text) { const clean = String(text || "").trim(); if (!clean) throw new Error("A publicação não pode ficar vazia."); const { data, error } = await supabase.from("posts").update({ text: clean }).eq("id", postId).eq("author_id", authorId).select(`*, profiles!posts_author_id_fkey(${profileFields})`).single(); if (error) throw error; return data; }
