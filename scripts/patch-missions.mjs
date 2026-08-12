@@ -39,5 +39,5 @@ const card=` const activeMission=missions[difficulty]&&missions[difficulty].date
 `;
 if(!s.includes(content))throw Error('Content não encontrado');s=s.replace(content,card+content);
 s=s.replace('onClick={()=>{setTab(t.id);if(t.id!=="messages")setChatId(null)}}','onClick={()=>{setTab(t.id);if(t.id!=="messages")setChatId(null);recordActivity("area",t.id)}}');
-s=s.replace('{error&&<div className="cv-error-bar" onClick={()=>setError("")}>{error}<X size={15}/></div>}','{error&&<div className="cv-error-bar" onClick={()=>setError("")}>{error}<X size={15}/></div>}{missionNotice&&<div className="cv-card" style={{borderColor:"#4a9b73",color:"#b9f0d3"}}>{missionNotice}</div>}');
+s=s.replace('{error&&<div className="cv-error-bar" onClick={()=>setError("")}>{error}<X size={15}/></div>}','{error&&<div className="cv-error-bar" onClick={()=>setError("")}>{error}<X size={15/></div>}{missionNotice&&<div className="cv-card" style={{borderColor:"#4a9b73",color:"#b9f0d3"}}>{missionNotice}</div>}');
 fs.writeFileSync(f,s); console.log('OK');
