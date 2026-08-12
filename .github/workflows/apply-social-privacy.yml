@@ -22,8 +22,26 @@ jobs:
       - name: Apply patch
         run: node scripts/apply-social-privacy.mjs
 
-      - name: Normalize mission patch
-        run: python3 -c 'from pathlib import Path; p=Path("scripts/patch-missions.mjs"); s=p.read_text(); s=s.replace("size={15/>","size={15}/>"); p.write_text(s)'
+      - name: Normalize existing patch scripts
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("scripts/patch-missions.mjs")
+          s = p.read_text()
+          s = s.replace("size={15/>", "size={15}/>")
+          p.write_text(s)
+
+          p = Path("scripts/patch-social.mjs")
+          s = p.read_text()
+          old = "else if(!s.includes('updatePost, deletePost, getComments')) throw new Error('Import social não encontrado');"
+          new = "else if(s.includes('updatePost, deletePost')) s=s.replace('updatePost, deletePost, subscribeToFeed','updatePost, deletePost, getComments, addComment, subscribeToComments, subscribeToFeed'); else throw new Error('Import social não encontrado');"
+          s = s.replace(old, new)
+          marker = "fs.writeFileSync(file,s);"
+          if "cv-post-photo-tools" not in s:
+              inject = '''if(!s.includes('cv-post-photo-tools')){\n  s=s.replace('<textarea placeholder="Compartilhe sua conquista ou progresso…" value={postText}', '<div className="cv-post-photo-tools"><label className="cv-photo-button"><ImageIcon size={18}/> Adicionar foto<input type="file" accept="image/*" onChange={uploadPostImage} hidden/></label>{postImage&&<button type="button" className="cv-photo-clear" onClick={()=>setPostImage(null)}>Remover foto</button>}</div><textarea placeholder="Compartilhe sua conquista ou progresso…" value={postText}');\n  s=s.replace('<p className="cv-post-text">{p.text}</p>', '{p.image_url&&<img className="cv-post-image" src={p.image_url} alt="Foto da publicação" loading="lazy"/>}<p className="cv-post-text">{p.text}</p>');\n}\n'''
+              s = s.replace(marker, inject + marker)
+          p.write_text(s)
+          PY
 
       - name: Build test
         run: |
@@ -38,6 +56,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add codex-vitae.jsx scripts/apply-social-privacy.mjs scripts/patch-missions.mjs
+          git add codex-vitae.jsx scripts/apply-social-privacy.mjs scripts/patch-missions.mjs scripts/patch-social.mjs
           git commit -m "feat: unique usernames private profiles and feed photos"
           git push
