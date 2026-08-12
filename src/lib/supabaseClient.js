@@ -2,9 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 
 // These values are safe for the browser only because they are the Supabase
 // publishable/anon credentials. Database security must still be enforced by RLS.
-// Keep the environment variables for deployments that provide them, but use
-// the project publishable values as a fallback so a GitHub Pages build cannot
-// render a completely blank screen just because Pages did not inject Vite envs.
 const url = import.meta.env.VITE_SUPABASE_URL || "https://kpfezbmtmxczpdvqogje.supabase.co";
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_oD41poIileZVeuzUV7qspg_eIOE89tW";
 
@@ -17,6 +14,7 @@ export async function signUp(email, password, name) {
   const cleanName = String(name || "Aventureiro").trim() || "Aventureiro";
   if (!cleanEmail) throw new Error("Digite seu e-mail.");
   if (!password || password.length < 6) throw new Error("A senha precisa ter pelo menos 6 caracteres.");
+  if (cleanName.length < 2) throw new Error("O nome precisa ter pelo menos 2 caracteres.");
   const redirectTo = `${window.location.origin}${window.location.pathname}`;
   const { data, error } = await supabase.auth.signUp({ email: cleanEmail, password, options: { data: { name: cleanName }, emailRedirectTo: redirectTo } });
   if (error) {
@@ -32,12 +30,12 @@ export async function signOut() { const { error } = await supabase.auth.signOut(
 export async function deleteMyAccount() { const { error } = await supabase.rpc("delete_my_account"); if (error) throw error; await supabase.auth.signOut(); }
 export async function resendConfirmation(email) { const cleanEmail = String(email || "").trim().toLowerCase(); if (!cleanEmail) throw new Error("Digite seu e-mail."); const redirectTo = `${window.location.origin}${window.location.pathname}`; const { error } = await supabase.auth.resend({ type: "signup", email: cleanEmail, options: { emailRedirectTo: redirectTo } }); if (error) { const msg = String(error.message || ""); if (/rate limit|60\s+seconds/i.test(msg)) throw new Error("Aguarde um pouco antes de reenviar o e-mail de confirmação novamente."); throw error; } }
 export async function getProfile(userId) { const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single(); if (error) throw error; return data; }
-export async function saveProfile(profile) { const { data, error } = await supabase.from("profiles").upsert(profile).select().single(); if (error) throw error; return data; }
-export async function updateProgress(userId, patch) { const { data, error } = await supabase.from("profiles").update(patch).eq("id", userId).select().single(); if (error) throw error; return data; }
+export async function saveProfile(profile) { const { data, error } = await supabase.from("profiles").upsert(profile).select().single(); if (error) { if (error.code === "23505") throw new Error("Esse nome de usuário já está em uso. Escolha outro nome."); throw error; } return data; }
+export async function updateProgress(userId, patch) { const { data, error } = await supabase.from("profiles").update(patch).eq("id", userId).select().single(); if (error) { if (error.code === "23505" || /profiles_name_unique_ci|duplicate key|unique constraint/i.test(error.message || "")) throw new Error("Esse nome de usuário já está em uso. Escolha outro nome."); throw error; } return data; }
 
-const profileFields = "id,name,avatar_url,level,total_xp,quests_completed_ever,max_streak_ever,usage_seconds,equipped_title";
+const profileFields = "id,name,avatar_url,level,total_xp,quests_completed_ever,max_streak_ever,usage_seconds,equipped_title,is_private";
 export async function getFeed(limit = 30) { const { data, error } = await supabase.from("posts").select(`*, profiles!posts_author_id_fkey(${profileFields})`).order("created_at", { ascending: false }).limit(limit); if (error) throw error; return data || []; }
-export async function publishPost({ authorId, text, achievementId = null }) { const { data, error } = await supabase.from("posts").insert({ author_id: authorId, text: text.trim(), achievement_id: achievementId }).select(`*, profiles!posts_author_id_fkey(${profileFields})`).single(); if (error) throw error; return data; }
+export async function publishPost({ authorId, text, imageUrl = null, achievementId = null }) { const cleanText = String(text || "").trim(); if (!cleanText && !imageUrl) throw new Error("Escreva algo ou escolha uma foto para publicar."); const { data, error } = await supabase.from("posts").insert({ author_id: authorId, text: cleanText, image_url: imageUrl, achievement_id: achievementId }).select(`*, profiles!posts_author_id_fkey(${profileFields})`).single(); if (error) throw error; return data; }
 export async function updatePost(postId, authorId, text) { const clean = String(text || "").trim(); if (!clean) throw new Error("A publicação não pode ficar vazia."); const { data, error } = await supabase.from("posts").update({ text: clean }).eq("id", postId).eq("author_id", authorId).select(`*, profiles!posts_author_id_fkey(${profileFields})`).single(); if (error) throw error; return data; }
 export async function deletePost(postId, authorId) { const { error } = await supabase.from("posts").delete().eq("id", postId).eq("author_id", authorId); if (error) throw error; }
 export async function getComments(postId) { const { data, error } = await supabase.from("comments").select(`*, profiles!comments_author_id_fkey(${profileFields})`).eq("post_id", postId).order("created_at", { ascending: true }); if (error) throw error; return data || []; }
