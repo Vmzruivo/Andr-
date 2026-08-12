@@ -1,16 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 
-// FIX (bug 3): don't hardcode the project URL/key as a fallback. A silent
-// fallback means a misconfigured build (missing .env) still "works" but
-// points at whatever project was hardcoded here, instead of failing loudly.
-const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-
-if (!url || !key) {
-  throw new Error(
-    "Codex Vitae: defina VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY (veja .env.example)."
-  );
-}
+// These values are safe for the browser only because they are the Supabase
+// publishable/anon credentials. Database security must still be enforced by RLS.
+// Keep the environment variables for deployments that provide them, but use
+// the project publishable values as a fallback so a GitHub Pages build cannot
+// render a completely blank screen just because Pages did not inject Vite envs.
+const url = import.meta.env.VITE_SUPABASE_URL || "https://kpfezbmtmxczpdvqogje.supabase.co";
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_oD41poIileZVeuzUV7qspg_eIOE89wT";
 
 export const supabase = createClient(url, key, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
@@ -53,9 +49,6 @@ export async function signIn(email, password) {
 }
 export async function signOut() { const { error } = await supabase.auth.signOut(); if (error) throw error; }
 
-// FIX (bug 4): signUp() already told the caller whether email confirmation
-// is required, but nothing let the user re-send that e-mail if it got lost
-// or expired. Without this, someone who missed the e-mail was stuck forever.
 export async function resendConfirmation(email) {
   const cleanEmail = String(email || "").trim().toLowerCase();
   if (!cleanEmail) throw new Error("Digite seu e-mail.");
