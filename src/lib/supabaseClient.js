@@ -1,7 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
-const url = import.meta.env.VITE_SUPABASE_URL || "https://kpfezbmtmxczpdvqogje.supabase.co";
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_oD41poIileZVeuzUV7qspg_eIOE89wT";
+// FIX (bug 3): don't hardcode the project URL/key as a fallback. A silent
+// fallback means a misconfigured build (missing .env) still "works" but
+// points at whatever project was hardcoded here, instead of failing loudly.
+const url = import.meta.env.VITE_SUPABASE_URL;
+const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+if (!url || !key) {
+  throw new Error(
+    "Codex Vitae: defina VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY (veja .env.example)."
+  );
+}
 
 export const supabase = createClient(url, key, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
@@ -43,6 +52,23 @@ export async function signIn(email, password) {
   return data;
 }
 export async function signOut() { const { error } = await supabase.auth.signOut(); if (error) throw error; }
+
+// FIX (bug 4): signUp() already told the caller whether email confirmation
+// is required, but nothing let the user re-send that e-mail if it got lost
+// or expired. Without this, someone who missed the e-mail was stuck forever.
+export async function resendConfirmation(email) {
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  if (!cleanEmail) throw new Error("Digite seu e-mail.");
+  const redirectTo = `${window.location.origin}${window.location.pathname}`;
+  const { error } = await supabase.auth.resend({ type: "signup", email: cleanEmail, options: { emailRedirectTo: redirectTo } });
+  if (error) {
+    const msg = String(error.message || "");
+    if (/rate limit|60\s+seconds/i.test(msg)) {
+      throw new Error("Aguarde um pouco antes de reenviar o e-mail de confirmação novamente.");
+    }
+    throw error;
+  }
+}
 export async function getProfile(userId) { const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single(); if (error) throw error; return data; }
 export async function saveProfile(profile) { const { data, error } = await supabase.from("profiles").upsert(profile).select().single(); if (error) throw error; return data; }
 export async function updateProgress(userId, patch) { const { data, error } = await supabase.from("profiles").update(patch).eq("id", userId).select().single(); if (error) throw error; return data; }
