@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import CodexVitae from "../codex-vitae.jsx";
 import AdminPanel from "./AdminPanel.jsx";
+import SocialHub from "./SocialHub.jsx";
 import "./app.css";
 
 class AppErrorBoundary extends React.Component {
@@ -25,6 +26,7 @@ class AppErrorBoundary extends React.Component {
 createRoot(document.getElementById("root")).render(
   <AppErrorBoundary>
     <CodexVitae />
+    <SocialHub />
     <AdminPanel />
   </AppErrorBoundary>
 );
