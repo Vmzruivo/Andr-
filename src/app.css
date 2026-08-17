@@ -1,1 +1,20 @@
 html,body,#root{min-height:100%;background:#140D12}*{box-sizing:border-box}button,input,textarea{font:inherit}textarea{min-height:90px;resize:vertical}
+
+/* Mobile-safe layout fixes */
+button{min-width:0;max-width:100%;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
+section,article,div{min-width:0}
+
+/* Mission cards: keep title, progress and action controls in normal flow. */
+.mission-card,.mission-item,.system-mission,.quest-card,[data-mission-card]{position:relative!important;overflow:hidden!important;height:auto!important;min-height:0!important}
+.mission-card>*,.mission-item>* ,.system-mission>* ,.quest-card>* ,[data-mission-card]>*{position:relative!important;box-sizing:border-box;max-width:100%}
+.mission-card button,.mission-item button,.system-mission button,.quest-card button,[data-mission-card] button{display:block;width:100%;height:auto!important;min-height:44px;margin-top:12px;padding:11px 16px;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
+.mission-card h3,.mission-item h3,.system-mission h3,.quest-card h3,[data-mission-card] h3{line-height:1.2!important;margin:0 0 8px!important;overflow-wrap:anywhere}
+.mission-card p,.mission-item p,.system-mission p,.quest-card p,[data-mission-card] p{line-height:1.45!important;margin:6px 0!important;overflow-wrap:anywhere}
+
+/* If an older mission implementation used absolute positioning, force its content back into flow. */
+.mission-card .mission-content,.mission-item .mission-content,.system-mission .mission-content,.quest-card .mission-content,[data-mission-card] .mission-content{position:relative!important;inset:auto!important}
+
+@media (max-width:700px){
+  .mission-card,.mission-item,.system-mission,.quest-card,[data-mission-card]{padding:16px!important;border-radius:20px!important}
+  .mission-card button,.mission-item button,.system-mission button,.quest-card button,[data-mission-card] button{font-size:15px!important}
+}
