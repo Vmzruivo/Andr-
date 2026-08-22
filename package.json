@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/apply-friend-requests.mjs && node scripts/fix-home-ui.mjs",
+    "prebuild": "node scripts/fix-home-goal-reference.mjs && node scripts/apply-friend-requests.mjs && node scripts/fix-home-ui.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "start": "vite preview"
