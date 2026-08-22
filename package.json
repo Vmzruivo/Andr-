@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/fix-home-goal-reference.mjs && node scripts/apply-friend-requests.mjs && node scripts/fix-home-ui.mjs && node scripts/fix-global-board-layout.mjs && node scripts/fix-global-board-and-missions.mjs && node scripts/final-ui-admin-fix.mjs && node scripts/fix-mission-cancel-ui.mjs && node scripts/fix-admin-runtime.mjs",
+    "prebuild": "node scripts/apply-friend-requests.mjs && node scripts/fix-home-ui.mjs && node scripts/fix-global-board-layout.mjs && node scripts/fix-global-board-and-missions.mjs && node scripts/final-ui-admin-fix.mjs && node scripts/fix-mission-cancel-ui.mjs && node scripts/fix-admin-runtime.mjs && node scripts/fix-home-goal-reference.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "start": "vite preview"
