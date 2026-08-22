@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import CodexVitae from "../codex-vitae.jsx";
+import AdminPanel from "./AdminPanel.jsx";
 import "./app.css";
 import "./mission-layout.css";
 
@@ -13,6 +14,8 @@ class AppErrorBoundary extends React.Component {
   }
 }
 
-createRoot(document.getElementById("root")).render(
-  <AppErrorBoundary><CodexVitae /></AppErrorBoundary>
-);
+function App(){
+  return <AppErrorBoundary><CodexVitae/><AdminPanel/></AppErrorBoundary>;
+}
+
+createRoot(document.getElementById("root")).render(<App/>);
