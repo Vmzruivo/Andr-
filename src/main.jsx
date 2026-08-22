@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import CodexVitae from "../codex-vitae.jsx";
 import "./app.css";
+import "./mission-layout.css";
 
 class AppErrorBoundary extends React.Component {
   constructor(props){super(props);this.state={error:null}}
