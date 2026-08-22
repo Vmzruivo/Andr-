@@ -1,81 +1,138 @@
-/* Codex Vitae — clean mission layout replacement */
+/* Codex Vitae — standalone mission layout
+   This file intentionally replaces the previous mission overrides.
+   It does not depend on :has() or a particular parent structure. */
 
-/* Mission card is the only home card containing the difficulty switch. */
-.cv-content > section > .cv-card:has(.cv-switch) {
-  width: 100% !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-  padding: 18px !important;
-}
-
-.cv-content > section > .cv-card:has(.cv-switch) .cv-section-head {
-  width: 100% !important;
-  min-width: 0 !important;
-  align-items: flex-start !important;
-}
-
-.cv-content > section > .cv-card:has(.cv-switch) .cv-section-head > div {
-  min-width: 0 !important;
-  flex: 1 1 auto !important;
-}
-
-.cv-content > section > .cv-card:has(.cv-switch) .cv-section-head h2,
-.cv-content > section > .cv-card:has(.cv-switch) .cv-section-head p {
-  max-width: 100% !important;
-  overflow-wrap: anywhere !important;
-  word-break: normal !important;
-}
-
-/* Replace the old five-column squeezed difficulty bar. */
-.cv-content > section > .cv-card:has(.cv-switch) .cv-switch {
+/* Mission difficulty selector */
+.cv-switch {
+  box-sizing: border-box !important;
   display: grid !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   gap: 8px !important;
   width: 100% !important;
+  max-width: 100% !important;
   min-width: 0 !important;
   margin: 16px 0 !important;
 }
 
-.cv-content > section > .cv-card:has(.cv-switch) .cv-switch > button {
+.cv-switch > button {
   box-sizing: border-box !important;
+  display: flex !important;
   width: 100% !important;
   min-width: 0 !important;
   min-height: 58px !important;
   height: auto !important;
-  padding: 9px 6px !important;
   margin: 0 !important;
-  display: flex !important;
+  padding: 10px 8px !important;
+  flex: none !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 4px !important;
+  overflow: hidden !important;
   border-radius: 12px !important;
   white-space: normal !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
   overflow-wrap: normal !important;
   word-break: normal !important;
   line-height: 1.15 !important;
-  font-size: 12px !important;
-  flex: none !important;
+  font-size: 13px !important;
 }
 
-.cv-content > section > .cv-card:has(.cv-switch) .cv-switch > button small {
+.cv-switch > button small {
   display: block !important;
   width: 100% !important;
   min-width: 0 !important;
   margin: 0 !important;
-  font-size: 10px !important;
-  line-height: 1.15 !important;
-  white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 10px !important;
+  line-height: 1.15 !important;
 }
 
-.cv-content > section > .cv-card:has(.cv-switch) > .cv-button {
+/* Mission body — never use a narrow grid/column for the text. */
+.cv-quest {
   box-sizing: border-box !important;
+  display: flex !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 14px !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  gap: 14px !important;
+  flex-wrap: wrap !important;
+  overflow: visible !important;
+}
+
+.cv-quest-info {
+  box-sizing: border-box !important;
+  display: flex !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  flex: 1 1 240px !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  overflow: visible !important;
+}
+
+.cv-quest-info b,
+.cv-quest-info small {
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  line-height: 1.4 !important;
+}
+
+.cv-quest-info b {
+  font-size: 17px !important;
+  font-weight: 800 !important;
+}
+
+.cv-quest-info small {
+  font-size: 13px !important;
+}
+
+.cv-quest .cv-progress {
+  box-sizing: border-box !important;
+  display: block !important;
   width: 100% !important;
   min-width: 0 !important;
+  height: 9px !important;
+  margin: 2px 0 !important;
+  overflow: hidden !important;
+}
+
+.cv-quest .cv-progress > span {
+  display: block !important;
+  height: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Buttons/status inside a mission must not shrink the text column. */
+.cv-quest > .cv-button,
+.cv-quest > button,
+.cv-quest > span,
+.cv-quest > svg,
+.cv-quest > div:not(.cv-quest-info) {
+  box-sizing: border-box !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.cv-quest > .cv-button,
+.cv-quest > button {
   min-height: 48px !important;
   height: auto !important;
   padding: 12px 16px !important;
@@ -84,100 +141,67 @@
   line-height: 1.2 !important;
 }
 
-/* Active mission: never allow text or controls to collapse into a narrow column. */
-.cv-content > section > .cv-card:has(.cv-switch) .cv-quest {
+/* The card containing the mission should always be allowed to grow. */
+.cv-card:has(.cv-switch),
+.cv-card:has(.cv-quest) {
+  box-sizing: border-box !important;
   width: 100% !important;
+  max-width: 100% !important;
   min-width: 0 !important;
-  display: flex !important;
-  align-items: stretch !important;
-  gap: 12px !important;
-  flex-wrap: wrap !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
 }
 
-.cv-content > section > .cv-card:has(.cv-switch) .cv-quest-info {
-  min-width: 0 !important;
-  flex: 1 1 220px !important;
-  width: auto !important;
-  overflow: hidden !important;
-}
-
-.cv-content > section > .cv-card:has(.cv-switch) .cv-quest-info b,
-.cv-content > section > .cv-card:has(.cv-switch) .cv-quest-info small {
-  display: block !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  overflow-wrap: anywhere !important;
-  word-break: normal !important;
-  line-height: 1.35 !important;
-}
-
-@media (max-width: 600px) {
-  .cv-content > section > .cv-card:has(.cv-switch) {
-    padding: 16px !important;
-    border-radius: 18px !important;
-  }
-
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-section-head {
-    gap: 10px !important;
-  }
-
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-section-head h2 {
-    font-size: 24px !important;
-    line-height: 1.08 !important;
-  }
-
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-section-head p {
-    font-size: 13px !important;
-    line-height: 1.4 !important;
-  }
-
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-switch {
+@media (max-width: 760px) {
+  .cv-switch {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
   }
 
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-switch > button {
-    min-height: 64px !important;
+  .cv-switch > button {
+    min-height: 66px !important;
     padding: 10px 8px !important;
     font-size: 13px !important;
   }
 
-  /* Pesadelo gets a full row instead of becoming tiny. */
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-switch > button:nth-child(5) {
+  /* Pesadelo always gets a complete row. */
+  .cv-switch > button:nth-child(5) {
     grid-column: 1 / -1 !important;
   }
 
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-switch > button small {
-    font-size: 10px !important;
-  }
-
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-quest {
+  .cv-quest {
     flex-direction: column !important;
+    gap: 12px !important;
+    padding: 12px 0 0 !important;
   }
 
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-quest-info {
-    flex: 1 1 auto !important;
+  .cv-quest-info {
     width: 100% !important;
+    flex: 0 0 auto !important;
   }
 
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-quest > .cv-button,
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-quest > div {
+  .cv-quest > .cv-button,
+  .cv-quest > button,
+  .cv-quest > span,
+  .cv-quest > div:not(.cv-quest-info) {
     width: 100% !important;
-    min-width: 0 !important;
+    flex: 0 0 auto !important;
   }
 
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-quest > div > .cv-button {
-    width: 100% !important;
+  .cv-quest > .cv-button,
+  .cv-quest > button {
+    min-height: 50px !important;
   }
 }
 
-@media (min-width: 601px) and (max-width: 760px) {
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-switch {
+@media (min-width: 761px) and (max-width: 980px) {
+  .cv-switch {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
+}
 
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-switch > button:nth-child(4),
-  .cv-content > section > .cv-card:has(.cv-switch) .cv-switch > button:nth-child(5) {
-    grid-column: span 1 !important;
-  }
+/* Guard against old mission rules assigning tiny widths to descendants. */
+.cv-quest * {
+  max-width: 100%;
 }
