@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from "react";
+import React,{useEffect,useState,useRef} from "react";
 import {supabase} from "./lib/supabaseClient";
 
 const base={background:"#1E1520",color:"#F5EFE6",border:"1px solid #7A4356",borderRadius:14,padding:12};
@@ -6,6 +6,8 @@ const btn={border:0,borderRadius:10,padding:"9px 12px",fontWeight:800,cursor:"po
 
 export default function AdminPanel(){
  const [open,setOpen]=useState(false),[allowed,setAllowed]=useState(false),[role,setRole]=useState(""),[section,setSection]=useState("users"),[users,setUsers]=useState([]),[posts,setPosts]=useState([]),[roles,setRoles]=useState([]),[missions,setMissions]=useState([]),[loading,setLoading]=useState(false),[error,setError]=useState(""),[email,setEmail]=useState(""),[roleTitle,setRoleTitle]=useState("Administrador"),[roleKind,setRoleKind]=useState("admin"),[mission,setMission]=useState({title:"",description:"",difficulty:"medium",xp:50});
+ const [fab,setFab]=useState({x:null,y:null});
+ const dragging=useRef(false),offset=useRef({x:0,y:0});
  const rpc=async(name,params={})=>{const {data,error}=await supabase.rpc(name,params);if(error)throw error;return data};
  useEffect(()=>{let mounted=true;(async()=>{try{const {data}=await supabase.auth.getSession();if(!mounted||!data.session)return;const {data:isAdmin,error:adminError}=await supabase.rpc("is_admin");if(adminError)throw adminError;if(!mounted)return;setAllowed(Boolean(isAdmin));if(isAdmin){const {data:r}=await supabase.from("admin_roles").select("role,title").eq("user_id",data.session.user.id).maybeSingle();if(mounted)setRole(r?.role||"admin")}}catch(e){if(mounted){setAllowed(false);setError(e?.message||"Não foi possível verificar a permissão administrativa.")}}})();return()=>{mounted=false}},[]);
  const load=async()=>{if(!allowed)return;setLoading(true);setError("");try{if(section==="users")setUsers(await rpc("admin_list_users"));if(section==="posts")setPosts(await rpc("admin_list_posts"));if(section==="admins")setRoles(await rpc("admin_list_roles"));if(section==="missions")setMissions(await rpc("admin_list_missions"))}catch(e){setError(e.message||"Erro administrativo")}finally{setLoading(false)}};
@@ -16,9 +18,13 @@ export default function AdminPanel(){
  const removeRole=async email=>{try{await rpc("admin_remove_role_by_email",{p_email:email});await load()}catch(e){setError(e.message)}};
  const createMission=async()=>{try{await rpc("admin_create_mission",{p_title:mission.title,p_description:mission.description,p_difficulty:mission.difficulty,p_xp:Number(mission.xp)});setMission({title:"",description:"",difficulty:"medium",xp:50});await load()}catch(e){setError(e.message)}};
  const deleteMission=async id=>{try{await rpc("admin_delete_mission",{p_id:id});await load()}catch(e){setError(e.message)}};
+ const startDrag=e=>{if(e.button!==undefined&&e.button!==0)return;const p=e.touches?.[0]||e;const rect=e.currentTarget.getBoundingClientRect();dragging.current=true;offset.current={x:p.clientX-rect.left,y:p.clientY-rect.top};e.currentTarget.setPointerCapture?.(e.pointerId)};
+ const moveDrag=e=>{if(!dragging.current)return;const p=e.touches?.[0]||e;const w=window.innerWidth,h=window.innerHeight,size=58;setFab({x:Math.max(6,Math.min(w-size-6,p.clientX-offset.current.x)),y:Math.max(6,Math.min(h-size-6,p.clientY-offset.current.y))})};
+ const endDrag=()=>{if(!dragging.current)return;dragging.current=false;};
  if(!allowed)return null;
+ const fabStyle={position:"fixed",left:fab.x==null?undefined:fab.x,top:fab.y==null?undefined:fab.y,right:fab.x==null?16:undefined,bottom:fab.y==null:150:undefined,zIndex:10001,width:60,height:60,borderRadius:"50%",border:"2px solid #E2C46F",background:"#C9A455",color:"#140D12",fontSize:26,boxShadow:"0 8px 30px #0009",display:"flex",alignItems:"center",justifyContent:"center",touchAction:"none",userSelect:"none",cursor:"grab"};
  return <>
-  <button onClick={()=>setOpen(true)} style={{position:"fixed",right:14,bottom:150,zIndex:9999,...btn,background:"#C9A455",color:"#140D12",boxShadow:"0 8px 30px #0008"}}>👑 ADM</button>
+  <button aria-label="Abrir painel ADM" onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} onClick={()=>{if(!dragging.current)setOpen(true)}} style={fabStyle}>👑</button>
   {open&&<div style={{position:"fixed",inset:0,zIndex:10000,background:"#000b",display:"flex",alignItems:"center",justifyContent:"center",padding:12}}>
    <div style={{...base,width:"min(100%,1000px)",maxHeight:"92vh",overflow:"auto"}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}><div><h2 style={{margin:"0 0 4px"}}>👑 Painel Administrativo</h2><small>Administrador {role==="super_admin"?"Supremo":""}</small></div><button style={btn} onClick={()=>setOpen(false)}>✕</button></div>
