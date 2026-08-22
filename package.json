@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/apply-friend-requests.mjs",
+    "prebuild": "node scripts/apply-friend-requests.mjs && node scripts/fix-home-ui.mjs",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "vite preview"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
