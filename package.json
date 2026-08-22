@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/apply-friend-requests.mjs && node scripts/fix-home-ui.mjs && node scripts/fix-global-board-layout.mjs && node scripts/fix-global-board-and-missions.mjs && node scripts/final-ui-admin-fix.mjs && node scripts/repair-final-ui-markers.mjs && node scripts/fix-mission-cancel-ui.mjs && node scripts/fix-admin-runtime.mjs && node scripts/fix-home-goal-reference.mjs",
     "build": "vite build",
+    "build:check": "node scripts/build-health.mjs",
+    "build:legacy-patches": "node scripts/apply-friend-requests.mjs && node scripts/fix-home-ui.mjs && node scripts/fix-global-board-layout.mjs && node scripts/fix-global-board-and-missions.mjs && node scripts/final-ui-admin-fix.mjs && node scripts/repair-final-ui-markers.mjs && node scripts/fix-mission-cancel-ui.mjs && node scripts/fix-admin-runtime.mjs && node scripts/fix-home-goal-reference.mjs",
+    "build:legacy": "npm run build:legacy-patches && vite build",
     "preview": "vite preview",
     "start": "vite preview"
   },
@@ -17,7 +19,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "vite": "^6.0.0",
-    "@vitejs/plugin-react": "^4.4.0"
+    "@vitejs/plugin-react": "^4.4.0",
+    "vite": "^6.0.0"
   }
 }
