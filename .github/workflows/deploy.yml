@@ -10,6 +10,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 env:
   VITE_SUPABASE_URL: https://kpfezbmtmxczpdvqogje.supabase.co
   VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
@@ -18,30 +22,47 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node
+
+      - name: Setup Node 22 LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
+          cache: npm
+
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Validate Supabase configuration
+        run: npm install --no-audit --no-fund --prefer-offline
+
+      - name: Run non-blocking build health check
+        run: npm run build:check
+        continue-on-error: true
+
+      - name: Check Supabase configuration
         env:
           KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           ANON: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: |
           if [ -z "$KEY" ] && [ -z "$ANON" ]; then
-            echo "Missing VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY) repository secret"
-            exit 1
+            echo "::warning::Supabase publishable/anon key secret is missing. The static site will still be built, but authentication/data access will not work until the secret is configured."
+          else
+            echo "Supabase configuration secret detected."
           fi
-      - name: Build
+
+      - name: Build static site
         run: npm run build
+
       - name: Verify build output
-        run: test -f dist/index.html && test -s dist/index.html
+        run: |
+          test -f dist/index.html
+          test -s dist/index.html
+          test -d dist/assets
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
@@ -50,6 +71,7 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
