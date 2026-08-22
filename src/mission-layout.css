@@ -1,55 +1,84 @@
-/* Codex Vitae — standalone mission layout
-   This file intentionally replaces the previous mission overrides.
-   It does not depend on :has() or a particular parent structure. */
+/* Codex Vitae — mission and leaderboard responsive layout */
 
-/* Mission difficulty selector */
 .cv-switch {
   box-sizing: border-box !important;
   display: grid !important;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 8px !important;
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  margin: 16px 0 !important;
+  margin: 14px 0 !important;
 }
-
 .cv-switch > button {
   box-sizing: border-box !important;
-  display: flex !important;
-  width: 100% !important;
   min-width: 0 !important;
-  min-height: 58px !important;
-  height: auto !important;
+  min-height: 46px !important;
+  width: 100% !important;
   margin: 0 !important;
-  padding: 10px 8px !important;
-  flex: none !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 4px !important;
-  overflow: hidden !important;
+  padding: 10px 12px !important;
   border-radius: 12px !important;
   white-space: normal !important;
-  overflow-wrap: normal !important;
-  word-break: normal !important;
-  line-height: 1.15 !important;
-  font-size: 13px !important;
 }
 
-.cv-switch > button small {
+/* One difficulty selector — no five-column mission wall. */
+.cv-mission-picker {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 16px 0 !important;
+}
+.cv-mission-picker label {
+  display: block !important;
+  margin-bottom: 7px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #E7CD8C !important;
+}
+.cv-select-wrap {
+  position: relative !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.cv-select-wrap select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
   display: block !important;
   width: 100% !important;
   min-width: 0 !important;
+  min-height: 52px !important;
+  padding: 12px 44px 12px 15px !important;
+  border: 1px solid rgba(201,164,85,.35) !important;
+  border-radius: 14px !important;
+  background: #291C2B !important;
+  color: #F5EFE6 !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  outline: none !important;
+}
+.cv-select-wrap select:focus {
+  border-color: #C9A455 !important;
+  box-shadow: 0 0 0 2px rgba(201,164,85,.14) !important;
+}
+.cv-select-arrow {
+  position: absolute !important;
+  right: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) rotate(90deg) !important;
+  pointer-events: none !important;
+  color: #E7CD8C !important;
+}
+.cv-mission-empty {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+.cv-mission-empty p {
   margin: 0 !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  font-size: 10px !important;
-  line-height: 1.15 !important;
+  line-height: 1.45 !important;
 }
 
-/* Mission body — never use a narrow grid/column for the text. */
 .cv-quest {
   box-sizing: border-box !important;
   display: flex !important;
@@ -58,92 +87,123 @@
   min-width: 0 !important;
   margin: 0 !important;
   padding: 14px !important;
-  flex-direction: row !important;
+  flex-direction: column !important;
   align-items: stretch !important;
-  gap: 14px !important;
-  flex-wrap: wrap !important;
+  gap: 12px !important;
   overflow: visible !important;
 }
-
 .cv-quest-info {
   box-sizing: border-box !important;
   display: flex !important;
-  width: auto !important;
+  width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  flex: 1 1 240px !important;
+  flex: 0 0 auto !important;
   flex-direction: column !important;
-  gap: 8px !important;
+  gap: 7px !important;
   overflow: visible !important;
 }
-
 .cv-quest-info b,
 .cv-quest-info small {
-  box-sizing: border-box !important;
   display: block !important;
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
   height: auto !important;
   margin: 0 !important;
-  padding: 0 !important;
   white-space: normal !important;
   overflow: visible !important;
   overflow-wrap: anywhere !important;
   word-break: normal !important;
   line-height: 1.4 !important;
 }
-
-.cv-quest-info b {
-  font-size: 17px !important;
-  font-weight: 800 !important;
-}
-
-.cv-quest-info small {
-  font-size: 13px !important;
-}
-
+.cv-quest-info b { font-size: 17px !important; font-weight: 800 !important; }
+.cv-quest-info small { font-size: 13px !important; }
 .cv-quest .cv-progress {
-  box-sizing: border-box !important;
   display: block !important;
   width: 100% !important;
   min-width: 0 !important;
   height: 9px !important;
-  margin: 2px 0 !important;
+  margin: 3px 0 !important;
   overflow: hidden !important;
 }
-
-.cv-quest .cv-progress > span {
-  display: block !important;
-  height: 100% !important;
+.cv-quest .cv-progress > span { display: block !important; height: 100% !important; }
+.cv-mission-actions {
+  display: flex !important;
+  width: 100% !important;
   min-width: 0 !important;
+  flex-direction: column !important;
+  gap: 8px !important;
 }
-
-/* Buttons/status inside a mission must not shrink the text column. */
-.cv-quest > .cv-button,
-.cv-quest > button,
-.cv-quest > span,
-.cv-quest > svg,
-.cv-quest > div:not(.cv-quest-info) {
-  box-sizing: border-box !important;
-  flex: 0 1 auto !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-}
-
-.cv-quest > .cv-button,
-.cv-quest > button {
+.cv-mission-actions .cv-button,
+.cv-cancelled-mission > .cv-button {
+  width: 100% !important;
   min-height: 48px !important;
-  height: auto !important;
-  padding: 12px 16px !important;
+  margin: 0 !important;
   white-space: normal !important;
-  overflow-wrap: anywhere !important;
-  line-height: 1.2 !important;
+}
+.cv-cancel-mission {
+  background: #7A4356 !important;
+  color: #F5EFE6 !important;
+  border: 1px solid #A65C73 !important;
+}
+.cv-cancelled-mission,
+.cv-completed-mission { align-items: center !important; }
+
+/* Top 5 highlighted, everyone after #5 stays in the normal list. */
+.cv-top5 {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 16px 0 !important;
+}
+.cv-top5 > button {
+  box-sizing: border-box !important;
+  position: relative !important;
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 190px !important;
+  margin: 0 !important;
+  padding: 12px 8px !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  border: 1px solid rgba(201,164,85,.28) !important;
+  border-radius: 16px !important;
+  background: #291C2B !important;
+  color: #F5EFE6 !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+  transform: none !important;
+}
+.cv-top5 > button.rank-1 { border-color: #C9A455 !important; box-shadow: 0 8px 24px rgba(201,164,85,.15) !important; }
+.cv-top5 > button.rank-2 { border-color: #AFAFAF !important; }
+.cv-top5 > button.rank-3 { border-color: #A9683A !important; }
+.cv-top5 .cv-podium-place { font-weight: 900 !important; color: #E7CD8C !important; }
+.cv-top5 .podium-avatar { width: 56px !important; height: 56px !important; flex: 0 0 56px !important; }
+.cv-top5 strong { max-width: 100% !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 13px !important; }
+.cv-top5 small { max-width: 100% !important; text-align: center !important; font-size: 10px !important; line-height: 1.3 !important; }
+.cv-top5 .cv-rank-benefit { max-width: 100% !important; text-align: center !important; color: #E7CD8C !important; font-size: 10px !important; line-height: 1.25 !important; }
+.cv-rank-rewards { margin-top: 14px !important; }
+
+@media (max-width: 760px) {
+  .cv-top5 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 9px !important; }
+  .cv-top5 > button { min-height: 170px !important; }
+  .cv-top5 > button.rank-5 { grid-column: 1 / -1 !important; }
 }
 
-/* The card containing the mission should always be allowed to grow. */
-.cv-card:has(.cv-switch),
-.cv-card:has(.cv-quest) {
+@media (max-width: 420px) {
+  .cv-top5 { grid-template-columns: 1fr !important; }
+  .cv-top5 > button.rank-5 { grid-column: auto !important; }
+  .cv-top5 > button { min-height: 150px !important; }
+}
+
+.cv-card:has(.cv-mission-picker),
+.cv-card:has(.cv-top5) {
   box-sizing: border-box !important;
   width: 100% !important;
   max-width: 100% !important;
@@ -151,57 +211,4 @@
   height: auto !important;
   min-height: 0 !important;
   overflow: visible !important;
-}
-
-@media (max-width: 760px) {
-  .cv-switch {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-  }
-
-  .cv-switch > button {
-    min-height: 66px !important;
-    padding: 10px 8px !important;
-    font-size: 13px !important;
-  }
-
-  /* Pesadelo always gets a complete row. */
-  .cv-switch > button:nth-child(5) {
-    grid-column: 1 / -1 !important;
-  }
-
-  .cv-quest {
-    flex-direction: column !important;
-    gap: 12px !important;
-    padding: 12px 0 0 !important;
-  }
-
-  .cv-quest-info {
-    width: 100% !important;
-    flex: 0 0 auto !important;
-  }
-
-  .cv-quest > .cv-button,
-  .cv-quest > button,
-  .cv-quest > span,
-  .cv-quest > div:not(.cv-quest-info) {
-    width: 100% !important;
-    flex: 0 0 auto !important;
-  }
-
-  .cv-quest > .cv-button,
-  .cv-quest > button {
-    min-height: 50px !important;
-  }
-}
-
-@media (min-width: 761px) and (max-width: 980px) {
-  .cv-switch {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  }
-}
-
-/* Guard against old mission rules assigning tiny widths to descendants. */
-.cv-quest * {
-  max-width: 100%;
 }
