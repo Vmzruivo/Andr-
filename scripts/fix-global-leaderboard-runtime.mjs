@@ -7,7 +7,7 @@ if (!fs.existsSync(appFile)) throw new Error(`Arquivo não encontrado: ${appFile
 
 // Keep the existing RPC/security model, but never trust the order returned by it.
 let client = fs.readFileSync(clientFile, 'utf8');
-const oldLeaderboard = /export async function getLeaderboard\(mode="level",limit=5000\)\{[\s\S]*?\n\}/;
+const oldLeaderboard = /export async function getLeaderboard\(mode="level",limit=5000\)\{[\s\S]*?\}export async function createPrivateConversation/;
 const newLeaderboard = `export async function getLeaderboard(mode="level",limit=5000){
   const safeMode=mode==="time"?"time":"level";
   const {data,error}=await supabase.rpc("get_global_leaderboard",{p_mode:safeMode,p_limit:safeLimit(limit,5000)});
@@ -19,7 +19,7 @@ const newLeaderboard = `export async function getLeaderboard(mode="level",limit=
     : num(b.level)-num(a.level)||num(b.total_xp)-num(a.total_xp)||num(b.quests_completed_ever)-num(a.quests_completed_ever)||num(b.usage_seconds)-num(a.usage_seconds)||String(a.id||"").localeCompare(String(b.id||""))
   );
   return rows.slice(0,safeLimit(limit,5000));
-}`;
+}export async function createPrivateConversation`;
 if (!oldLeaderboard.test(client)) throw new Error('Função getLeaderboard não encontrada para correção.');
 client = client.replace(oldLeaderboard,newLeaderboard);
 fs.writeFileSync(clientFile,client);
