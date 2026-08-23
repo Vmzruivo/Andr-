@@ -4,13 +4,17 @@ const clientFile = "src/lib/supabaseClient.js";
 const appFile = "codex-vitae.jsx";
 
 if (!fs.existsSync(clientFile) || !fs.existsSync(appFile)) {
-  console.warn("[leaderboard] source files not found; leaving the existing build intact.");
+  console.warn("[leaderboard] source files not found; leaving the build inputs unchanged.");
   process.exit(0);
 }
 
+// Patch getLeaderboard using stable function boundaries instead of a fragile
+// multiline regex. This prevents CI from failing when formatting changes.
 let client = fs.readFileSync(clientFile, "utf8");
-const leaderboardRe = /export async function getLeaderboard\([^)]*\)\{[\s\S]*?\}\s*export async function createPrivateConversation/;
-const replacement = `export async function getLeaderboard(mode="level",limit=5000){
+const clientStart = client.indexOf("export async function getLeaderboard");
+const clientEnd = client.indexOf("export async function createPrivateConversation", clientStart);
+if (clientStart >= 0 && clientEnd > clientStart) {
+  const replacement = `export async function getLeaderboard(mode="level",limit=5000){
   const safeMode=mode==="time"?"time":"level";
   const {data,error}=await supabase.rpc("get_global_leaderboard",{p_mode:safeMode,p_limit:safeLimit(limit,5000)});
   if(error)throw error;
@@ -27,32 +31,30 @@ const replacement = `export async function getLeaderboard(mode="level",limit=500
   );
   return rows.slice(0,safeLimit(limit,5000));
 }
-export async function createPrivateConversation`;
-
-if (leaderboardRe.test(client)) {
-  client = client.replace(leaderboardRe, replacement);
+`;
+  client = client.slice(0, clientStart) + replacement + client.slice(clientEnd);
   fs.writeFileSync(clientFile, client);
   console.log("[leaderboard] deterministic level/XP ordering applied.");
 } else {
-  console.warn("[leaderboard] getLeaderboard pattern changed; skipping source rewrite instead of failing the build.");
+  console.warn("[leaderboard] getLeaderboard boundaries not found; skipping source rewrite.");
 }
 
 let app = fs.readFileSync(appFile, "utf8");
 
+// Replace the old board refresh effect only when it is still present. The
+// marker makes repeated local/build runs harmless.
 if (!app.includes("CODEX_GLOBAL_LEADERBOARD_RUNTIME_V3")) {
   const oldBoard = /useEffect\(\(\)=>\{if\(tab!=="board"\|\|!session\)return;getLeaderboard\(boardMode\)\.then\(setBoard\)\.catch\(e=>setError\(e\.message\)\)\},\[tab,boardMode,session\]\);/;
   const newBoard = `useEffect(()=>{if(tab!=="board"||!session)return;let stopped=false;const loadBoard=async()=>{try{const rows=await getLeaderboard(boardMode,5000);if(!stopped)setBoard(rows)}catch(e){if(!stopped)setError(e?.message||"Não foi possível atualizar o placar global.")}};loadBoard();const timer=setInterval(loadBoard,60000);return()=>{stopped=true;clearInterval(timer)}},[tab,boardMode,session]);`;
-  if (oldBoard.test(app)) {
-    app = app.replace(oldBoard, newBoard);
-  }
+  if (oldBoard.test(app)) app = app.replace(oldBoard, newBoard);
 
-  const oldRank = /useEffect\(\(\)=>\{if\(!session\)return;getLeaderboard\("level"\)\.then\(rows=>\{const i=rows\.findIndex\(p=>p\.id===session\.user\.id\);setGlobalRank\(i\)\}\)\.catch\(\()=>setGlobalRank\(-1\)\)\},\[session,profile\?\.total_xp\]\);/;
+  const oldRank = /useEffect\(\(\)=>\{if\(!session\)return;getLeaderboard\("level"\)\.then\(rows=>\{const i=rows\.findIndex\(p=>p\.id===session\.user\.id\);setGlobalRank\(i\)\}\)\.catch\(\(\)=>setGlobalRank\(-1\)\)\},\[session,profile\?\.total_xp\]\);/;
   const newRank = `useEffect(()=>{if(!session)return;let stopped=false;const loadMyRank=async()=>{try{const rows=await getLeaderboard("level",5000);const i=rows.findIndex(p=>p.id===session.user.id);if(!stopped)setGlobalRank(i)}catch{if(!stopped)setGlobalRank(-1)}};loadMyRank();const timer=setInterval(loadMyRank,60000);return()=>{stopped=true;clearInterval(timer)}},[session,profile?.level,profile?.total_xp]);`;
   if (oldRank.test(app)) app = app.replace(oldRank, newRank);
 
   app = app.replace(/\n\s*const \[session,/, "\n // CODEX_GLOBAL_LEADERBOARD_RUNTIME_V3\n const [session,");
   fs.writeFileSync(appFile, app);
-  console.log("[leaderboard] 60s refresh hooks applied.");
+  console.log("[leaderboard] 60-second refresh hooks applied.");
 } else {
-  console.log("[leaderboard] runtime patch already present; nothing to do.");
+  console.log("[leaderboard] runtime marker already present; no duplicate hooks added.");
 }
