@@ -1,7 +1,8 @@
-html,body,#root{min-height:100%;background:#0c080d}
+html,body,#root{min-height:100%;background:#09070b}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;color:#F5EFE6;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-x:hidden}
+body{margin:0;color:#F7F0E8;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-x:hidden;background:#09070b}
+body::selection{background:#D9B86C;color:#140D12}
 button,input,textarea,select{font:inherit}
 button{min-width:0;max-width:100%;line-height:1.25;-webkit-tap-highlight-color:transparent}
 input,textarea,select{outline:none}
@@ -9,59 +10,88 @@ textarea{min-height:90px;resize:vertical}
 img{max-width:100%;height:auto}
 main,section,article,header,footer,div{min-width:0}
 :root{color-scheme:dark}
-::selection{background:#C9A455;color:#140D12}
-main{width:100%;max-width:1180px!important;margin:0 auto!important;padding:28px 24px 118px!important}
-main>header{position:relative!important;margin-bottom:20px!important}
-main h1,main h2,main h3,main h4{font-family:Georgia,"Times New Roman",serif;letter-spacing:-.025em}
-main h1{font-size:clamp(30px,5vw,52px)!important;line-height:1.02!important;margin:0!important}
+::selection{background:#D9B86C;color:#140D12}
+
+/* RITUAL — visual system: premium RPG + daily progression */
+.ritual-shell{position:relative;min-height:100vh;background:radial-gradient(circle at 15% 0%,rgba(132,62,91,.22),transparent 32%),radial-gradient(circle at 85% 10%,rgba(217,184,108,.13),transparent 28%),linear-gradient(145deg,#09070b 0%,#100a12 48%,#09070b 100%);isolation:isolate}
+.ritual-shell::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,black,transparent 80%)}
+.ritual-atmosphere{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:-1}
+.ritual-atmosphere span{position:absolute;width:320px;height:320px;border-radius:50%;filter:blur(90px);opacity:.12}
+.ritual-atmosphere span:nth-child(1){background:#8b3d61;left:-120px;top:8%}
+.ritual-atmosphere span:nth-child(2){background:#d9b86c;right:-130px;top:32%}
+.ritual-atmosphere span:nth-child(3){background:#4b315c;left:35%;bottom:-180px}
+.ritual-app-layer{position:relative;z-index:1}
+.ritual-mark{width:54px;height:54px;display:grid;place-items:center;border-radius:18px;background:linear-gradient(145deg,#e6c879,#9e7330);color:#170e13;font-family:Georgia,serif;font-size:30px;font-weight:900;box-shadow:0 12px 35px rgba(217,184,108,.2),inset 0 1px rgba(255,255,255,.55)}
+.ritual-mark-small{width:46px;height:46px;border-radius:15px;font-size:25px}
+
+main{width:100%;max-width:1180px!important;margin:0 auto!important;padding:30px 24px 122px!important;position:relative}
+main>header{position:relative!important;margin-bottom:22px!important}
+main h1,main h2,main h3,main h4{font-family:Georgia,"Times New Roman",serif;letter-spacing:-.035em}
+main h1{font-size:clamp(32px,5vw,54px)!important;line-height:1.02!important;margin:0!important}
 main h2{font-size:clamp(25px,4vw,40px)!important}
 main p{line-height:1.5}
-.cv-card{background:linear-gradient(145deg,rgba(39,27,42,.96),rgba(24,16,26,.98))!important;border:1px solid rgba(231,205,140,.12)!important;border-radius:24px!important;box-shadow:0 18px 50px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.025)!important}
-.cv-card:hover{border-color:rgba(201,164,85,.26)!important}
-button{border-radius:14px!important;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease!important}
+
+.cv-card{background:linear-gradient(145deg,rgba(35,23,39,.88),rgba(16,11,19,.96))!important;border:1px solid rgba(231,205,140,.14)!important;border-radius:26px!important;box-shadow:0 24px 70px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.035)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important}
+.cv-card:hover{border-color:rgba(217,184,108,.32)!important;box-shadow:0 28px 80px rgba(0,0,0,.34),0 0 0 1px rgba(217,184,108,.035)!important}
+button{border-radius:15px!important;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease!important}
 button:active{transform:scale(.98)!important}
-button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{box-shadow:0 0 0 3px rgba(201,164,85,.22)!important;border-color:#C9A455!important}
-input,textarea,select{background:#211621!important;color:#F5EFE6!important;border:1px solid rgba(231,205,140,.14)!important;border-radius:14px!important}
-input::placeholder,textarea::placeholder{color:#8f818d!important}
-input{min-height:48px}
-nav,.cv-nav,.cv-bottom-nav,[class*="bottom-nav"]{max-width:calc(100vw - 20px)!important}
-@media(max-width:700px){
- main{padding:18px 14px 108px!important}
- main>header{margin-bottom:14px!important}
- .cv-card{border-radius:20px!important}
- nav,.cv-nav,.cv-bottom-nav,[class*="bottom-nav"]{position:fixed!important;left:10px!important;right:10px!important;bottom:max(10px,env(safe-area-inset-bottom))!important;width:auto!important;z-index:80!important;border-radius:22px!important;background:rgba(30,21,32,.94)!important;border:1px solid rgba(231,205,140,.12)!important;box-shadow:0 18px 50px rgba(0,0,0,.42),0 0 0 1px rgba(255,255,255,.015)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}
- nav,.cv-nav{grid-template-columns:repeat(7,minmax(0,1fr))!important}
- nav button,.cv-nav button,.cv-bottom-nav button,[class*="bottom-nav"] button{min-height:58px!important;padding:7px 3px!important;min-width:0!important}
- .cv-nav span{font-size:clamp(7px,2.1vw,9px)!important;white-space:nowrap!important}
-}
-.cv-stat,.cv-stat-card{background:linear-gradient(145deg,#241824,#171018)!important;border:1px solid rgba(231,205,140,.10)!important;border-radius:20px!important}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{box-shadow:0 0 0 3px rgba(217,184,108,.22)!important;border-color:#D9B86C!important}
+input,textarea,select{background:rgba(28,18,30,.92)!important;color:#F7F0E8!important;border:1px solid rgba(231,205,140,.15)!important;border-radius:15px!important}
+input::placeholder,textarea::placeholder{color:#897c89!important}
+input{min-height:50px}
+
+/* Login / authentication: intentionally distinct from the old flat screen */
+.ritual-shell form{width:100%;max-width:520px;margin-inline:auto}
+.ritual-shell form h1,.ritual-shell form h2{font-family:Georgia,serif!important}
+.ritual-shell form input,.ritual-shell form textarea,.ritual-shell form select{box-shadow:inset 0 1px rgba(255,255,255,.025),0 8px 30px rgba(0,0,0,.16)!important}
+.ritual-shell form button{box-shadow:0 12px 30px rgba(0,0,0,.22)!important}
+
+.cv-stat,.cv-stat-card{background:linear-gradient(145deg,rgba(42,27,46,.94),rgba(20,13,23,.98))!important;border:1px solid rgba(231,205,140,.11)!important;border-radius:22px!important}
+.cv-stat strong,.cv-stat-card strong{color:#F4D989}
 .cv-mission-picker,.cv-mission-empty,.cv-quest,.cv-quest-info,.cv-mission-actions{width:100%!important;max-width:100%!important;min-width:0!important}
 .cv-mission-picker{margin:16px 0!important}
-.cv-mission-picker label{display:block!important;margin-bottom:8px!important;color:#E7CD8C!important;font-weight:800!important}
+.cv-mission-picker label{display:block!important;margin-bottom:8px!important;color:#E7CD8C!important;font-weight:850!important}
 .cv-select-wrap{position:relative!important;width:100%!important}
-.cv-select-wrap select{appearance:none!important;width:100%!important;min-height:54px!important;padding:12px 45px 12px 16px!important;background:#211621!important;color:#F5EFE6!important;border:1px solid rgba(201,164,85,.28)!important;border-radius:15px!important}
-.cv-quest{display:flex!important;flex-direction:column!important;gap:13px!important;padding:16px!important;overflow:visible!important}
+.cv-select-wrap select{appearance:none!important;width:100%!important;min-height:56px!important;padding:12px 45px 12px 16px!important;background:rgba(33,21,34,.95)!important;color:#F7F0E8!important;border:1px solid rgba(217,184,108,.30)!important;border-radius:16px!important}
+.cv-quest{display:flex!important;flex-direction:column!important;gap:14px!important;padding:18px!important;overflow:visible!important}
 .cv-quest-info{display:flex!important;flex-direction:column!important;gap:7px!important}
 .cv-quest-info b,.cv-quest-info small{display:block!important;width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;line-height:1.42!important}
 .cv-progress{width:100%!important;height:9px!important;border-radius:99px!important;overflow:hidden!important;background:#352538!important}
 .cv-mission-actions{display:flex!important;flex-direction:column!important;gap:8px!important}
-.cv-mission-actions button,.cv-cancelled-mission button{width:100%!important;min-height:48px!important}
-.cv-cancel-mission{background:#6d354b!important;border:1px solid #9b536d!important;color:#fff!important}
+.cv-mission-actions button,.cv-cancelled-mission button{width:100%!important;min-height:49px!important}
+.cv-cancel-mission{background:linear-gradient(135deg,#71364f,#4b2638)!important;border:1px solid #a65b76!important;color:#fff!important}
+
+/* Global leaderboard */
 .cv-top5{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important;width:100%!important}
-.cv-top5>button{min-width:0!important;min-height:190px!important;padding:14px 10px!important;border-radius:18px!important;background:linear-gradient(160deg,#2b1d2d,#1b121d)!important;border:1px solid rgba(201,164,85,.20)!important;color:#F5EFE6!important}
-.cv-top5>button.rank-1{border-color:#C9A455!important;box-shadow:0 12px 30px rgba(201,164,85,.14)!important}
+.cv-top5>button{min-width:0!important;min-height:200px!important;padding:15px 10px!important;border-radius:20px!important;background:linear-gradient(160deg,rgba(52,34,54,.95),rgba(24,15,27,.98))!important;border:1px solid rgba(217,184,108,.20)!important;color:#F7F0E8!important;box-shadow:0 14px 40px rgba(0,0,0,.22)!important}
+.cv-top5>button.rank-1{border-color:#D9B86C!important;box-shadow:0 16px 45px rgba(217,184,108,.16)!important;transform:translateY(-5px)}
 .cv-top5>button.rank-2{border-color:#aaa!important}
 .cv-top5>button.rank-3{border-color:#9d613e!important}
-.cv-top5 .podium-avatar{width:58px!important;height:58px!important;flex:0 0 58px!important}
+.cv-top5 .podium-avatar{width:62px!important;height:62px!important;flex:0 0 62px!important}
+
 table{width:100%;border-collapse:collapse}
-[role="dialog"],.cv-modal{max-width:min(92vw,620px)!important;max-height:calc(100svh - 32px)!important;overflow:auto!important;border-radius:24px!important}
-.cv-admin-float{z-index:120!important;touch-action:none!important}
+[role="dialog"],.cv-modal{max-width:min(92vw,620px)!important;max-height:calc(100svh - 32px)!important;overflow:auto!important;border-radius:26px!important}
+.cv-admin-float{z-index:120!important;touch-action:none!important;box-shadow:0 16px 40px rgba(0,0,0,.45),0 0 0 1px rgba(217,184,108,.12)!important}
+
+nav,.cv-nav,.cv-bottom-nav,[class*="bottom-nav"]{max-width:calc(100vw - 20px)!important}
 @media(max-width:760px){
- main{padding-left:12px!important;padding-right:12px!important}
+ main{padding:18px 12px 112px!important}
+ main>header{margin-bottom:16px!important}
+ .cv-card{border-radius:21px!important}
+ nav,.cv-nav,.cv-bottom-nav,[class*="bottom-nav"]{position:fixed!important;left:9px!important;right:9px!important;bottom:max(9px,env(safe-area-inset-bottom))!important;width:auto!important;z-index:80!important;border-radius:22px!important;background:rgba(22,14,24,.90)!important;border:1px solid rgba(231,205,140,.14)!important;box-shadow:0 20px 55px rgba(0,0,0,.50),inset 0 1px rgba(255,255,255,.03)!important;backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important}
+ nav,.cv-nav{grid-template-columns:repeat(7,minmax(0,1fr))!important}
+ nav button,.cv-nav button,.cv-bottom-nav button,[class*="bottom-nav"] button{min-height:58px!important;padding:7px 3px!important;min-width:0!important}
+ .cv-nav span{font-size:clamp(7px,2.1vw,9px)!important;white-space:nowrap!important}
  .cv-top5{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
- .cv-top5>button{min-height:165px!important}
+ .cv-top5>button{min-height:170px!important}
  .cv-top5>button.rank-5{grid-column:1/-1!important}
- table{font-size:12px}
+ .cv-admin-float{width:54px!important;height:54px!important;right:14px!important;bottom:88px!important}
+ main div{max-width:100%!important}
+ main [style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}
+ main [style*="display: grid"]{min-width:0!important}
+ main [style*="display: flex"]{min-width:0!important}
+ main p,main span,main strong,main small,main h2,main h3,main h4{overflow-wrap:anywhere}
+ main button{white-space:normal!important}
 }
 @media(max-width:430px){
  main{padding-left:10px!important;padding-right:10px!important}
@@ -69,14 +99,6 @@ table{width:100%;border-collapse:collapse}
  .cv-top5>button.rank-5{grid-column:auto!important}
  .cv-top5>button{min-height:145px!important}
  main h1{font-size:32px!important}
-}
-@media(max-width:700px){
- main div{max-width:100%!important}
- main [style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important}
- main [style*="display: grid"]{min-width:0!important}
- main [style*="display: flex"]{min-width:0!important}
- main p,main span,main strong,main small,main h2,main h3,main h4{overflow-wrap:anywhere}
- main button{white-space:normal!important}
- .cv-admin-float{width:54px!important;height:54px!important;right:14px!important;bottom:88px!important}
+ .ritual-mark{width:48px;height:48px;border-radius:15px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
