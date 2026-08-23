@@ -27,9 +27,8 @@ if (missionForStart >= 0 && missionProgressStart > missionForStart) {
   s = s.slice(0, missionForStart) + missionForNew + s.slice(missionProgressStart);
 }
 
-// 2) Mission card. IMPORTANT: remove any old activeMission/mp declarations that
-// may have been left immediately before the card by an earlier patch. This makes
-// the script idempotent and prevents "Identifier ... has already been declared".
+// 2) Mission card. Remove any old activeMission/mp declarations immediately
+// before the card so repeated builds cannot create duplicate declarations.
 const cardMarker = "const missionCard=";
 const myRankMarker = "const myGlobalRank=";
 const cardStart = s.indexOf(cardMarker);
@@ -49,8 +48,8 @@ const missionCard=<div className="cv-card cv-missions-card"><div className="cv-s
   s = s.slice(0, replaceStart) + missionCardNew + s.slice(rankStart);
 }
 
-// 3) Global leaderboard refresh. The deterministic sorting itself is handled by
-// fix-global-leaderboard-runtime.mjs; this patch only handles the UI fallback.
+// 3) Leaderboard refresh. If the older effect is still present, replace it.
+// Sorting is also performed defensively in the UI, with level first by default.
 const boardAnchor = /useEffect\(\(\)=>\{if\(tab!=="board"\|\|!session\)return;getLeaderboard\(boardMode\)\.then\(setBoard\)\.catch\(e=>setError\(e\.message\)\)\},\[tab,boardMode,session\]\);/;
 const boardEffect = `const sortLeaderboard=(rows,mode)=>[...(rows||[])].sort((a,b)=>mode==="time"?Number(b.usage_seconds||0)-Number(a.usage_seconds||0)||Number(b.total_xp||0)-Number(a.total_xp||0):Number(b.level||1)-Number(a.level||1)||Number(b.total_xp||0)-Number(a.total_xp||0)||Number(b.quests_completed_ever||0)-Number(a.quests_completed_ever||0));
  useEffect(()=>{if(tab!=="board"||!session)return;let cancelled=false;const load=async()=>{try{const rows=await getLeaderboard(boardMode,5000);if(!cancelled)setBoard(sortLeaderboard(rows,boardMode))}catch(e){if(!cancelled)setError(e?.message||"Não foi possível atualizar o placar global.")}};load();const timer=setInterval(load,60000);return()=>{cancelled=true;clearInterval(timer)}},[tab,boardMode,session]);`;
@@ -58,8 +57,14 @@ if (!s.includes("const sortLeaderboard=") && boardAnchor.test(s)) s = s.replace(
 
 // 4) Keep the user's displayed global rank synchronized every minute.
 const rankEffectRe = /useEffect\(\(\)=>\{if\(!session\)return;getLeaderboard\("level"\)\.then\(rows=>\{const i=rows\.findIndex\(p=>p\.id===session\.user\.id\);setGlobalRank\(i\)\}\)\.catch\(\(\)=>setGlobalRank\(-1\)\)\},\[session,profile\?\.total_xp\]\);/;
-const rankEffectNew = `useEffect(()=>{if(!session)return;let cancelled=false;const loadRank=async()=>{try{const rows=await getLeaderboard("level",5000);const i=rows.findIndex(p=>p.id===session.user.id);if(!cancelled)setGlobalRank(i)}catch{if(!cancelled)setGlobalRank(-1)}};loadRank();const timer=setInterval(loadRank,60000);return()=>{cancelled=true;clearInterval(timer)}},[session,profile?.level,profile?.total_xp]);`;
+const rankEffectNew = `useEffect(()=>{if(!session)return;let cancelled=false;const loadRank=async()=>{try{const rows=sortLeaderboard(await getLeaderboard("level",5000),"level");const i=rows.findIndex(p=>p.id===session.user.id);if(!cancelled)setGlobalRank(i)}catch{if(!cancelled)setGlobalRank(-1)}};loadRank();const timer=setInterval(loadRank,60000);return()=>{cancelled=true;clearInterval(timer)}},[session,profile?.level,profile?.total_xp]);`;
 if (rankEffectRe.test(s)) s = s.replace(rankEffectRe, rankEffectNew);
 
+// 5) Top-5 visual board. Replacing the whole board block is intentionally
+// idempotent: the same marker range is rebuilt on every clean CI checkout.
+const boardBlockRe = /board:<section>[\s\S]*?achievements:<section>/;
+const boardBlockNew = `board:<section><div className="cv-card cv-global-board"><div className="cv-section-head"><div><h2>Placar global</h2><p className="cv-muted">Os 5 melhores ficam em destaque. O restante aparece na classificação normal.</p></div></div><div className="cv-switch cv-board-mode"><button className={boardMode==="level"?"active":""} onClick={()=>setBoardMode("level")}>Nível</button><button className={boardMode==="time"?"active":""} onClick={()=>setBoardMode("time")}>Tempo</button></div>{board.length>0&&<div className="cv-top5">{board.slice(0,5).map((p,i)=><button className={"cv-podium rank-"+(i+1)} key={p.id} onClick={()=>openProfile(p)}><div className="cv-podium-place">#{i+1}</div><div className="cv-avatar podium-avatar">{p.avatar_url?<img src={p.avatar_url} alt=""/>:(p.name||"A")[0]}</div><strong>{p.name||"Aventureiro"}</strong><small>{boardMode==="level"?"Nível "+(p.level||1)+" · "+(p.total_xp||0)+" XP":Math.floor((p.usage_seconds||0)/60)+" min de jornada"}</small><span className="cv-rank-benefit">{i===0?"👑 Lenda Global":i===1?"🥈 Elite Global":i===2?"🥉 Veterano Global":"⭐ Top 5 Global"}</span></button>)}</div>}{board.slice(5).map((p,i)=><button className="cv-rank" key={p.id} onClick={()=>openProfile(p)}><b>#{i+6}</b><div className="cv-avatar tiny">{p.avatar_url?<img src={p.avatar_url} alt=""/>:(p.name||"A")[0]}</div><div><strong>{p.name||"Aventureiro"}</strong><small>{boardMode==="level"?"Nível "+(p.level||1)+" · "+(p.total_xp||0)+" XP":Math.floor((p.usage_seconds||0)/60)+" min de jornada"}</small></div><ChevronRight size={16}/></button>)}{board.length===0&&<p className="cv-muted">Nenhum jogador disponível.</p>}<div className="cv-card cv-rank-rewards"><h3>🎁 Destaques do Top 5</h3><p><b>🥇 1º:</b> Lenda Global.</p><p><b>🥈 2º:</b> Elite Global.</p><p><b>🥉 3º:</b> Veterano Global.</p><p><b>⭐ 4º e 5º:</b> Top 5 Global.</p><small>O ranking é recalculado pelo nível e, em caso de empate, pelo XP.</small></div></div></section>,\nachievements:<section>`;
+if (boardBlockRe.test(s)) s = s.replace(boardBlockRe, boardBlockNew);
+
 fs.writeFileSync(file, s);
-console.log("[missions] mobile mission and leaderboard patch applied safely.");
+console.log("[missions] mobile mission, leaderboard and Top-5 patches applied safely.");
