@@ -34,30 +34,13 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      # The repository currently contains a minimal lockfile that is not a
-      # complete npm v3 lock tree. npm ci intentionally refuses to repair such
-      # a lockfile, so it was the reason the deploy stopped during install.
-      # npm install is allowed to reconcile package.json/package-lock.json and
-      # create the complete dependency tree needed by this CI run.
-      - name: Install and reconcile dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Verify dependency tree
-        run: npm ls --depth=0
+      - name: Repair and install dependencies
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --no-audit --no-fund
 
       - name: Run build health check
         run: npm run build:check
-
-      - name: Check Supabase configuration
-        env:
-          KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          ANON: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: |
-          if [ -z "$KEY" ] && [ -z "$ANON" ]; then
-            echo "::warning::Supabase publishable/anon key secret is missing. The static site will still be built, but authentication/data access will not work until the secret is configured."
-          else
-            echo "Supabase configuration secret detected."
-          fi
 
       - name: Build static site
         run: npm run build
