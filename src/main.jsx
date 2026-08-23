@@ -5,6 +5,7 @@ import AdminPanel from "./AdminPanel.jsx";
 import "./app.css";
 import "./mission-layout.css";
 import "./mobile-fix.css";
+import "./ritual-force.css";
 
 class ErrorBoundary extends React.Component {
   constructor(props){super(props);this.state={error:null}}
