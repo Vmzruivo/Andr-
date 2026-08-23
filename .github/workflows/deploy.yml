@@ -34,10 +34,14 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Repair and install dependencies
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Validate build scripts
         run: |
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-          npm ci --no-audit --no-fund
+          node --check scripts/brand-ritual.mjs
+          node --check scripts/fix-global-leaderboard-runtime.mjs
+          node --check scripts/fix-mobile-missions-leaderboard.mjs
 
       - name: Run build health check
         run: npm run build:check
