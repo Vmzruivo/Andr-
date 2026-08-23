@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/fix-global-leaderboard-runtime.mjs && node scripts/fix-mobile-missions-leaderboard.mjs && vite build",
+    "build": "node scripts/brand-ritual.mjs && node scripts/fix-global-leaderboard-runtime.mjs && node scripts/fix-mobile-missions-leaderboard.mjs && vite build",
     "build:check": "node scripts/build-health.mjs",
     "build:legacy-patches": "node scripts/apply-friend-requests.mjs && node scripts/fix-home-ui.mjs && node scripts/fix-global-board-layout.mjs && node scripts/fix-global-board-and-missions.mjs && node scripts/final-ui-admin-fix.mjs && node scripts/repair-final-ui-markers.mjs && node scripts/fix-mission-cancel-ui.mjs && node scripts/fix-admin-runtime.mjs && node scripts/fix-home-goal-reference.mjs",
-    "build:legacy": "npm run build:legacy-patches && node scripts/fix-global-leaderboard-runtime.mjs && node scripts/fix-mobile-missions-leaderboard.mjs && vite build",
+    "build:legacy": "npm run build:legacy-patches && node scripts/brand-ritual.mjs && node scripts/fix-global-leaderboard-runtime.mjs && node scripts/fix-mobile-missions-leaderboard.mjs && vite build",
     "preview": "vite preview",
     "start": "vite preview"
   },
